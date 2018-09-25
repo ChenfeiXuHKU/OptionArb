@@ -109,6 +109,8 @@ def get_option(code, underlying, o_data, u_time, expiry, maturity, hsi_price):
             
     if index_hsi_c != 0 and index_hsi_p != 0:
         if len(hsi_o[index_hsi_c].split()) > 12:
+            
+            HSIStrike = hsi_o[index_hsi_c].split()[1]
             HSI_C = hsi_o[index_hsi_c].split()[12]
             HSI_C_C = hsi_o[index_hsi_c].split()[13]
             HSI_C_O = hsi_o[index_hsi_c].split()[9]
@@ -117,6 +119,7 @@ def get_option(code, underlying, o_data, u_time, expiry, maturity, hsi_price):
             HSI_P_C = hsi_o[index_hsi_p].split()[13]
             HSI_P_O = hsi_o[index_hsi_p].split()[9]
         else:
+            HSIStrike = hsi_o[index_hsi_c].split()[1]
             HSI_C = hsi_o[index_hsi_c].split()[6]
             HSI_C_C = hsi_o[index_hsi_c].split()[7]
             HSI_C_O = hsi_o[index_hsi_c].split()[3]
@@ -125,6 +128,8 @@ def get_option(code, underlying, o_data, u_time, expiry, maturity, hsi_price):
             HSI_P_C = hsi_o[index_hsi_p].split()[7]
             HSI_P_O = hsi_o[index_hsi_p].split()[3]
         
+        summary_data.update({'HSI Price':hsi_price})
+        summary_data.update({'HSI Strike':float(HSIStrike)})
         summary_data.update({'Open(HSIo,C)':HSI_C_O})
         summary_data.update({'Settle(HSIo,C)':HSI_C})
         summary_data.update({'Change(HSIo,C%)':round(100*float(HSI_C_C)/(float(HSI_C)-float(HSI_C_C)),2)})
@@ -522,13 +527,13 @@ if __name__=="__main__":
     special_list = ['2018-04-30', '2018-05-31', '2018-06-29', '2018-07-31']
     
     #time_list_4 = ['2018-04-03','2018-04-04','2018-04-06','2018-04-09','2018-04-10','2018-04-11','2018-04-12','2018-04-13', '2018-04-16', '2018-04-17', '2018-04-18', '2018-04-19', '2018-04-20','2018-04-23','2018-04-24','2018-04-25','2018-04-26','2018-04-27']
-    #time_list_5 = ['2018-05-02','2018-05-03','2018-05-04','2018-05-07','2018-05-08','2018-05-09','2018-05-10','2018-05-11', '2018-05-14', '2018-05-15', '2018-05-16', '2018-05-17', '2018-05-18','2018-05-21','2018-05-23','2018-05-24','2018-05-25','2018-05-28', '2018-05-29', '2018-05-30']
+    time_list_5 = ['2018-05-02','2018-05-03','2018-05-04','2018-05-07','2018-05-08','2018-05-09','2018-05-10','2018-05-11', '2018-05-14', '2018-05-15', '2018-05-16', '2018-05-17', '2018-05-18','2018-05-21','2018-05-23','2018-05-24','2018-05-25','2018-05-28', '2018-05-29', '2018-05-30']
     #time_list_6 = ['2018-06-07','2018-06-08','2018-06-11','2018-06-12','2018-06-13','2018-06-14','2018-06-15','2018-06-19','2018-06-20','2018-06-21','2018-06-22','2018-06-25','2018-06-26','2018-06-27','2018-06-28']
     #time_list_7 = ['2018-07-13','2018-07-16','2018-07-17','2018-07-18','2018-07-19','2018-07-20','2018-07-23','2018-07-24','2018-07-25','2018-07-26','2018-07-27','2018-07-30']
     #time_list_7 = ['2018-07-03','2018-07-04','2018-07-05','2018-07-06','2018-07-09','2018-07-10','2018-07-11','2018-07-12']
-    time_list_7 = ['2018-07-31',]
+    #time_list_7 = ['2018-07-31',]
     
-    for u_time in time_list_7:
+    for u_time in time_list_5:
         
         m = int(u_time[5:7].lstrip('0'))
         
