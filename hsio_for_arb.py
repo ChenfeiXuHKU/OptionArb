@@ -16,6 +16,7 @@ cols=[]
 for i in range(len(data)-1):
     date = data.loc[i+1,'Date']
     strike = data.loc[i, 'HSI Strike']
+    price = data.loc[i+1, 'HSI Price']
     
     summary_data = OrderedDict()
                 
@@ -29,6 +30,7 @@ for i in range(len(data)-1):
     hsi_o = hsi_data[1].split('\n')
     #print(hsi_o)        
     summary_data.update({'Date':date})
+    summary_data.update({'Price':float(price)})
     summary_data.update({'Strike':float(strike)})
     
     index_hsi_c = 0

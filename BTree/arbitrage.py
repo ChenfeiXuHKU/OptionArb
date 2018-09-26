@@ -318,7 +318,7 @@ end = '2018-07-31'
 
 fund = 100000
 
-Period,fund_cum,Return,long_fund_cum,Long_Return,short_fund_cum,Short_Return = arbitrage(begin, end, 1, option_info, fund)
+Period,fund_cum,Return,long_fund_cum,Long_Return,short_fund_cum,Short_Return = arbitrage(begin, end, 5, option_info, fund)
 
 
 data = pd.DataFrame(index = Period, columns=['FundCum','Return','LongFundCum','LongReturn','ShortFundCum','ShortReturn'])
@@ -337,7 +337,7 @@ indis = (indicators.append(indicators_long)).append(indicators_short)
 
 print(indicators.T)
 
-name='Results(BinomialTree)'
+name='Results(5,BinomialTree)'
 wbw = pd.ExcelWriter(name+'.xlsx')
 data.to_excel(wbw, 'PnL')
 indis.to_excel(wbw, 'Indicators')

@@ -112,10 +112,10 @@ if __name__=="__main__":
             price_data = pd.DataFrame.from_dict(summary_data, orient='index').T       
             data = pd.concat([data, price_data], sort=True)
                   
-    if not os.path.exists('HSIoption_data/'):
-        os.makedirs('HSIoption_data/')
+    if not os.path.exists('hsio_data/'):
+        os.makedirs('hsio_data/')
         
-    file_name = 'HSIoption_data' + '/HSIoption'
+    file_name = 'hsio_data' + '/hsio'
     data.to_csv(file_name + '.csv', sep=',', na_rep='N/A', columns=cols, index=False)
 
 
