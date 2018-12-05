@@ -23,7 +23,7 @@ def get_code():
     chrome_options = Options()
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--disable-gpu')
-    response = webdriver.Chrome(chrome_options=chrome_options)
+    response = webdriver.Chrome(options=chrome_options)
     response.get(url)
     sleep(20)
     response.find_element_by_xpath('//*[@id="lhkexw-singlestocklanding"]/section/div[2]/div/div[3]/div[2]/div[1]/span').click()
@@ -181,95 +181,84 @@ def get_option(code, underlying, o_data, u_time, expiry, maturity, hsi_price):
         r = 0.0015
         q = 0.0424
         Expiry = maturity
-        #T = (Expiry - int(u_time[8:10].lstrip('0')))/365
-        T = 30/365
+        T = (Expiry - int(u_time[8:10].lstrip('0')))/365
+        #T = 30/365
         theo_c_BI = binomialTree(price, s_vol, r, T, float(Strike), 3, 'C')
         theo_p_BI = binomialTree(price, s_vol, r, T, float(Strike), 3, 'P')
-
-#        theo_cm30 = binomialTree(price*0.7, float(IV_1C)/100, r, T, float(Strike), 3, 'C')
-#        theo_cm20 =binomialTree(price*0.8, float(IV_1C)/100, r, T,float(Strike), 3, 'C')
-        theo_cm10 = binomialTree(price*0.9, float(IV_1C)/100, r, T, float(Strike), 3, 'C')
-        theo_cm5 = binomialTree(price*0.95, float(IV_1C)/100, r,  T,float(Strike), 3, 'C')
-        theo_cm1 = binomialTree(price*0.99, float(IV_1C)/100, r, T, float(Strike), 3, 'C')
-        theo_c0 = binomialTree(price, float(IV_1C)/100, r, T, float(Strike), 3, 'C')
-        theo_c1 = binomialTree(price*1.01, float(IV_1C)/100, r, T, float(Strike), 3, 'C')
-        theo_c5 = binomialTree(price*1.05, float(IV_1C)/100, r, T,float(Strike), 3, 'C')
-        theo_c10 = binomialTree(price*1.1, float(IV_1C)/100, r, T,float(Strike), 3, 'C')
-#        theo_c20 = binomialTree(price*1.2, float(IV_1C)/100, r, T,float(Strike), 3, 'C')
-#        theo_c30 = binomialTree(price*1.3, float(IV_1C)/100, r, T, float(Strike), 3, 'C')
-
-#        theo_pm30 = binomialTree(price*0.7, float(IV_1P)/100, r, T, float(Strike), 3, 'P')
-#        theo_pm20 = binomialTree(price*0.8, float(IV_1P)/100, r, T, float(Strike), 3, 'P')
-        theo_pm10 = binomialTree(price*0.9, float(IV_1P)/100, r, T,float(Strike), 3, 'P')
-        theo_pm5 = binomialTree(price*0.95, float(IV_1P)/100, r,  T,float(Strike), 3, 'P')
-        theo_pm1 = binomialTree(price*0.99, float(IV_1P)/100, r,  T,float(Strike), 3, 'P')
-        theo_p0 =binomialTree(price, float(IV_1P)/100, r,  T,float(Strike), 3, 'P')
-        theo_p1 = binomialTree(price*1.01, float(IV_1P)/100, r, T, float(Strike), 3, 'P')
-        theo_p5 = binomialTree(price*1.05, float(IV_1P)/100, r, T, float(Strike), 3, 'P')
-        theo_p10 = binomialTree(price*1.1, float(IV_1P)/100, r,  T,float(Strike), 3, 'P')
-#        theo_p20 = binomialTree(price*1.2, float(IV_1P)/100, r,  T,float(Strike), 3, 'P')
-#        theo_p30 = binomialTree(price*1.3, float(IV_1P)/100, r, T, float(Strike), 3, 'P')
         
         theo_c_BS = price_option(price, float(Strike), r, q, s_vol, T, 0)
         theo_p_BS = price_option(price, float(Strike), r, q, s_vol, T, 1)
         
-        summary_data.update({'Open(C)':O_C})
-        summary_data.update({'Settle(C)':S_C})
-        summary_data.update({'Change(C)':S_C_C})
-        if S_C_C == '-':
-            summary_data.update({'Change(C%)':'-'})
-        else:
-            summary_data.update({'Change(C%)':round(100*float(S_C_C)/(float(S_C)-float(S_C_C)),2)})
+        if theo_c_BI[0] >= 0 and theo_p_BI[0] >= 0 and theo_c_BS >= 0 and theo_p_BS >= 0:
         
-        summary_data.update({'T-Price(tree,C)':round(theo_c_BI[0],2)})
-        summary_data.update({'T-Price(BS,C)':round(theo_c_BS,2)})
-
-        summary_data.update({'Open(P)':O_P})
-        summary_data.update({'Settle(P)':S_P})
-        summary_data.update({'Change(P)':S_P_C})
-        if S_P_C == '-':
-            summary_data.update({'Change(P%)':'-'})
-        else:
-            summary_data.update({'Change(P%)':round(100*float(S_P_C)/(float(S_P)-float(S_P_C)),2)})
+            theo_cm10 = binomialTree(price*0.9, float(IV_1C)/100, r, T, float(Strike), 3, 'C')
+            theo_cm5 = binomialTree(price*0.95, float(IV_1C)/100, r,  T,float(Strike), 3, 'C')
+            theo_cm1 = binomialTree(price*0.99, float(IV_1C)/100, r, T, float(Strike), 3, 'C')
+            theo_c0 = binomialTree(price, float(IV_1C)/100, r, T, float(Strike), 3, 'C')
+            theo_c1 = binomialTree(price*1.01, float(IV_1C)/100, r, T, float(Strike), 3, 'C')
+            theo_c5 = binomialTree(price*1.05, float(IV_1C)/100, r, T,float(Strike), 3, 'C')
+            theo_c10 = binomialTree(price*1.1, float(IV_1C)/100, r, T,float(Strike), 3, 'C')
+    
+            theo_pm10 = binomialTree(price*0.9, float(IV_1P)/100, r, T,float(Strike), 3, 'P')
+            theo_pm5 = binomialTree(price*0.95, float(IV_1P)/100, r,  T,float(Strike), 3, 'P')
+            theo_pm1 = binomialTree(price*0.99, float(IV_1P)/100, r,  T,float(Strike), 3, 'P')
+            theo_p0 =binomialTree(price, float(IV_1P)/100, r,  T,float(Strike), 3, 'P')
+            theo_p1 = binomialTree(price*1.01, float(IV_1P)/100, r, T, float(Strike), 3, 'P')
+            theo_p5 = binomialTree(price*1.05, float(IV_1P)/100, r, T, float(Strike), 3, 'P')
+            theo_p10 = binomialTree(price*1.1, float(IV_1P)/100, r, T, float(Strike), 3, 'P')
+     
+            summary_data.update({'Open(C)':O_C})
+            summary_data.update({'Settle(C)':S_C})
+            summary_data.update({'Change(C)':S_C_C})
+            if S_C_C == '-':
+                summary_data.update({'Change(C%)':'-'})
+            else:
+                summary_data.update({'Change(C%)':round(100*float(S_C_C)/(float(S_C)-float(S_C_C)),2)})
             
-        summary_data.update({'T-Price(tree,P)':round(theo_p_BI[0],2)})
-        summary_data.update({'T-Price(BS,P)':round(theo_p_BS,2)})
+            summary_data.update({'T-Price(tree,C)':round(theo_c_BI[0],2)})
+            summary_data.update({'T-Price(BS,C)':round(theo_c_BS,2)})
+    
+            summary_data.update({'Open(P)':O_P})
+            summary_data.update({'Settle(P)':S_P})
+            summary_data.update({'Change(P)':S_P_C})
+            if S_P_C == '-':
+                summary_data.update({'Change(P%)':'-'})
+            else:
+                summary_data.update({'Change(P%)':round(100*float(S_P_C)/(float(S_P)-float(S_P_C)),2)})
+                
+            summary_data.update({'T-Price(tree,P)':round(theo_p_BI[0],2)})
+            summary_data.update({'T-Price(BS,P)':round(theo_p_BS,2)})
+            
+            #Add delta and vega
+            delta_c = get_delta(price, float(Strike), r, q, float(IV_1C)/100, T, 0)
+            delta_p = get_delta(price, float(Strike), r, q, float(IV_1P)/100, T, 1)
+    
+            vega_c = get_vega(price, float(Strike), r, q, float(IV_1C)/100, T)
+            vega_p = get_vega(price, float(Strike), r, q, float(IV_1P)/100, T)
+    
+            summary_data.update({'Delta(C)':round(delta_c,2)})
+            summary_data.update({'Delta(P)':round(delta_p,2)})
+            summary_data.update({'Vega(C)':round(vega_c,2)})
+            summary_data.update({'Vega(P)':round(vega_p,2)})
+            
+            summary_data.update({'P(-10%C)':round(theo_cm10[0],2)})
+            summary_data.update({'P(-5%C)':round(theo_cm5[0],2)})
+            summary_data.update({'P(-1%C)':round(theo_cm1[0],2)})
+            summary_data.update({'P(0%C)':round(theo_c0[0],2)})
+            summary_data.update({'P(1%C)':round(theo_c1[0],2)})
+            summary_data.update({'P(5%C)':round(theo_c5[0],2)})
+            summary_data.update({'P(10%C)':round(theo_c10[0],2)})
+    
+            summary_data.update({'P(-10%P)':round(theo_pm10[0],2)})
+            summary_data.update({'P(-5%P)':round(theo_pm5[0],2)})
+            summary_data.update({'P(-1%P)':round(theo_pm1[0],2)})
+            summary_data.update({'P(0%P)':round(theo_p0[0],2)})
+            summary_data.update({'P(1%P)':round(theo_p1[0],2)})
+            summary_data.update({'P(5%P)':round(theo_p5[0],2)})
+            summary_data.update({'P(10%P)':round(theo_p10[0],2)})
         
-        #Add delta and vega
-        delta_c = get_delta(price, float(Strike), r, q, float(IV_1C)/100, T, 0)
-        delta_p = get_delta(price, float(Strike), r, q, float(IV_1P)/100, T, 1)
-
-        vega_c = get_vega(price, float(Strike), r, q, float(IV_1C)/100, T)
-        vega_p = get_vega(price, float(Strike), r, q, float(IV_1P)/100, T)
-
-        summary_data.update({'Delta(C)':round(delta_c,2)})
-        summary_data.update({'Delta(P)':round(delta_p,2)})
-        summary_data.update({'Vega(C)':round(vega_c,2)})
-        summary_data.update({'Vega(P)':round(vega_p,2)})
-        
-#        summary_data.update({'P(-30%C)':round(theo_cm30[0],2)})
-#        summary_data.update({'P(-20%C)':round(theo_cm20[0],2)})
-        summary_data.update({'P(-10%C)':round(theo_cm10[0],2)})
-        summary_data.update({'P(-5%C)':round(theo_cm5[0],2)})
-        summary_data.update({'P(-1%C)':round(theo_cm1[0],2)})
-        summary_data.update({'P(0%C)':round(theo_c0[0],2)})
-        summary_data.update({'P(1%C)':round(theo_c1[0],2)})
-        summary_data.update({'P(5%C)':round(theo_c5[0],2)})
-        summary_data.update({'P(10%C)':round(theo_c10[0],2)})
-#        summary_data.update({'P(20%C)':round(theo_c20[0],2)})
-#        summary_data.update({'P(30%C)':round(theo_c30[0],2)})
-        
-#        summary_data.update({'P(-30%P)':round(theo_pm30[0],2)})
-#        summary_data.update({'P(-20%P)':round(theo_pm20[0],2)})
-        summary_data.update({'P(-10%P)':round(theo_pm10[0],2)})
-        summary_data.update({'P(-5%P)':round(theo_pm5[0],2)})
-        summary_data.update({'P(-1%P)':round(theo_pm1[0],2)})
-        summary_data.update({'P(0%P)':round(theo_p0[0],2)})
-        summary_data.update({'P(1%P)':round(theo_p1[0],2)})
-        summary_data.update({'P(5%P)':round(theo_p5[0],2)})
-        summary_data.update({'P(10%P)':round(theo_p10[0],2)})
-#        summary_data.update({'P(20%P)':round(theo_p20[0],2)})
-#        summary_data.update({'P(30%P)':round(theo_p30[0],2)})
+        else:
+            summary_data.clear()
     
     else:
         summary_data.clear()
@@ -290,7 +279,7 @@ def get_delta(S, K, r, q, sigma, T, t_o):
             delta = math.exp(-1*q*T)*(norm.cdf(d1)-1)
 
     else:
-        delta = 0
+        delta = -1
 
     return delta
 
@@ -304,88 +293,99 @@ def get_vega(S, K, r, q, sigma, T):
         vega = (1/100)*S*math.exp(-1*q*T)*math.sqrt(T)*(1/math.sqrt(2*math.pi))*math.exp(-1*d1*d1/2)
 
     else:
-        vega = 0
+        vega = -1
 
     return vega
 
-def binomialTree( S0, volatility, rate, time, strike, steps, CorP):
+#theo_c0 = binomialTree(price, float(IV_1C)/100, r, T, float(Strike), 3, 'C')
+def binomialTree(S0, volatility, rate, time, strike, steps, CorP):
+    
     smallT = float(time)/steps
-    up = math.exp(volatility * math.sqrt(smallT))
-    down = 1/up
-    if up==down:
-        prob = (math.exp(rate * smallT) - down)/((up - down)+0.000001)
-    else:
+
+    if volatility != 0 and smallT > 0:
+        up = math.exp(volatility * math.sqrt(smallT))
+        down = 1.0 / up
+        print(smallT)
+        print(volatility)
+        print(up)
+        
         prob = (math.exp(rate * smallT) - down)/(up - down)
-    df = math.exp(-1 * rate * smallT)
-    call = False
-    if CorP == "C":
-        call = True
-    binomialSet = []
-    oriPrice = [S0]
-    binomialSet.append(oriPrice)
-
-    #initial each step price
-    for i in range(1, steps+1):
-        pricelist = []
-        prePriceList = binomialSet[i - 1]
-        for j in range(0, i+1):
-            if j < i:
-                price = prePriceList[j] * up
-            else:
-                price = prePriceList[j-1] * down
-            pricelist.append(price)
-        binomialSet.append(pricelist)
-#    print binomialSet
-
-    i = steps
-    optionPriceSet = []
-    #calculate call option price
-    if call:
-        finaloptionPrilist = []
-        for price in binomialSet[steps]:
-
-            if price > strike:
-                finaloptionPrilist.append(price-strike)
-            else:
-                finaloptionPrilist.append(0)
-        optionPriceSet.append(finaloptionPrilist)
-
-        while i >= 1:
-            pricelist = binomialSet[i-1]
-            optionPrice = []
-            preOptionPrice = optionPriceSet[steps-i]
-            for j in range(0, len(pricelist)):
-                tmp = pricelist[j] - strike
-                dfprice = df * ((1-prob) * preOptionPrice[j+1] +  prob * preOptionPrice[j])
-                optionPrice.append(max(tmp, dfprice, 0))
-            optionPriceSet.append(optionPrice)
-            i = i-1
-
-    # calculate put option price
-    if not call:
-        finaloptionPrilist = []
-        for price in binomialSet[steps]:
-
-            if price < strike:
-                finaloptionPrilist.append(strike - price)
-            else:
-                finaloptionPrilist.append(0)
-        optionPriceSet.append(finaloptionPrilist)
-
-        while i >= 1:
-            pricelist = binomialSet[i - 1]
-            optionPrice = []
-            preOptionPrice = optionPriceSet[steps - i]
-            for j in range(0, len(pricelist)):
-                tmp = strike - pricelist[j]
-                dfprice = df * ((1- prob)* preOptionPrice[j + 1] +  prob * preOptionPrice[j])
-                optionPrice.append(max(tmp, dfprice, 0))
-            optionPriceSet.append(optionPrice)
-            i = i - 1
-#    print optionPriceSet
-
-#    print("the option price is :"  + str(optionPriceSet[-1]))
+        
+        df = math.exp(-1 * rate * smallT)
+        
+        call = False
+        if CorP == "C":
+            call = True
+        
+        binomialSet = []
+        oriPrice = [S0]
+        binomialSet.append(oriPrice)
+    
+        #initial each step price
+        for i in range(1, steps+1):
+            pricelist = []
+            prePriceList = binomialSet[i - 1]
+            for j in range(0, i+1):
+                if j < i:
+                    price = prePriceList[j] * up
+                else:
+                    price = prePriceList[j-1] * down
+                pricelist.append(price)
+            binomialSet.append(pricelist)
+    
+        i = steps
+        optionPriceSet = []
+        
+        #calculate call option price
+        if call:
+            finaloptionPrilist = []
+            for price in binomialSet[steps]:
+    
+                if price > strike:
+                    finaloptionPrilist.append(price-strike)
+                else:
+                    finaloptionPrilist.append(0)
+            optionPriceSet.append(finaloptionPrilist)
+    
+            while i >= 1:
+                pricelist = binomialSet[i-1]
+                optionPrice = []
+                preOptionPrice = optionPriceSet[steps-i]
+                for j in range(0, len(pricelist)):
+                    tmp = pricelist[j] - strike
+                    dfprice = df * ((1-prob) * preOptionPrice[j+1] +  prob * preOptionPrice[j])
+                    optionPrice.append(max(tmp, dfprice, 0))
+                optionPriceSet.append(optionPrice)
+                i = i-1
+    
+        # calculate put option price
+        if not call:
+            finaloptionPrilist = []
+            for price in binomialSet[steps]:
+    
+                if price < strike:
+                    finaloptionPrilist.append(strike - price)
+                else:
+                    finaloptionPrilist.append(0)
+            optionPriceSet.append(finaloptionPrilist)
+    
+            while i >= 1:
+                pricelist = binomialSet[i - 1]
+                optionPrice = []
+                preOptionPrice = optionPriceSet[steps - i]
+                for j in range(0, len(pricelist)):
+                    tmp = strike - pricelist[j]
+                    dfprice = df * ((1- prob)* preOptionPrice[j + 1] +  prob * preOptionPrice[j])
+                    optionPrice.append(max(tmp, dfprice, 0))
+                optionPriceSet.append(optionPrice)
+                i = i - 1
+    else:
+        a = [-1]
+        return a
+        
+        
     return optionPriceSet[-1]
+
 
 def price_option(S, K, r, q, sigma, T, t_o):
     
@@ -400,7 +400,7 @@ def price_option(S, K, r, q, sigma, T, t_o):
             P = K*math.exp(-1*r*(T))*norm.cdf(-1*d2) - S*math.exp(-1*q*(T))*norm.cdf(-1*d1)
             return P
     else:
-        return 0
+        return -1
 
 
 def get_s_vol(underlying, lastdate, m = 21):
@@ -522,18 +522,22 @@ if __name__=="__main__":
     code, underlying = get_code()
 
     expiry_list = [0,0,'MAR19','APR18','MAY18','JUN18','JUL18','AUG18','SEP18','OCT18',0,0]
-    maturity_list = [30,30,30, 27,30,28,30, 30,30,30,30,30]
+    maturity_list = [30,30,30, 27,30,28,30,30, 30,30,30,30]
     
-    special_list = ['2018-04-30', '2018-05-31', '2018-06-29', '2018-07-31']
+    special_list = ['2018-04-30', '2018-05-31', '2018-06-29', '2018-07-31', '2018-08-31']
     
     #time_list_4 = ['2018-04-03','2018-04-04','2018-04-06','2018-04-09','2018-04-10','2018-04-11','2018-04-12','2018-04-13', '2018-04-16', '2018-04-17', '2018-04-18', '2018-04-19', '2018-04-20','2018-04-23','2018-04-24','2018-04-25','2018-04-26','2018-04-27']
-    time_list_5 = ['2018-05-02','2018-05-03','2018-05-04','2018-05-07','2018-05-08','2018-05-09','2018-05-10','2018-05-11', '2018-05-14', '2018-05-15', '2018-05-16', '2018-05-17', '2018-05-18','2018-05-21','2018-05-23','2018-05-24','2018-05-25','2018-05-28', '2018-05-29', '2018-05-30']
+    #time_list_5 = ['2018-05-02','2018-05-03','2018-05-04','2018-05-07','2018-05-08','2018-05-09','2018-05-10','2018-05-11', '2018-05-14', '2018-05-15', '2018-05-16', '2018-05-17', '2018-05-18','2018-05-21','2018-05-23','2018-05-24','2018-05-25','2018-05-28', '2018-05-29', '2018-05-30']
     #time_list_6 = ['2018-06-07','2018-06-08','2018-06-11','2018-06-12','2018-06-13','2018-06-14','2018-06-15','2018-06-19','2018-06-20','2018-06-21','2018-06-22','2018-06-25','2018-06-26','2018-06-27','2018-06-28']
     #time_list_7 = ['2018-07-13','2018-07-16','2018-07-17','2018-07-18','2018-07-19','2018-07-20','2018-07-23','2018-07-24','2018-07-25','2018-07-26','2018-07-27','2018-07-30']
     #time_list_7 = ['2018-07-03','2018-07-04','2018-07-05','2018-07-06','2018-07-09','2018-07-10','2018-07-11','2018-07-12']
-    #time_list_7 = ['2018-07-31',]
-    
-    for u_time in time_list_5:
+#    time_list_8 = ['2018-08-01','2018-08-02','2018-08-03',\
+#                   '2018-08-06','2018-08-07','2018-08-08','2018-08-09','2018-08-10', \
+#                   '2018-08-13','2018-08-14','2018-08-15','2018-08-16','2018-08-17',\
+#                   '2018-08-20','2018-08-21','2018-08-22','2018-08-23','2018-08-24',
+#                    '2018-08-27','2018-08-28','2018-08-29','2018-08-30',]
+    time_list_8 = ['2018-08-30']
+    for u_time in time_list_8:
         
         m = int(u_time[5:7].lstrip('0'))
         
@@ -551,7 +555,7 @@ if __name__=="__main__":
         chrome_options = Options()
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--disable-gpu')
-        response = webdriver.Chrome(chrome_options=chrome_options)
+        response = webdriver.Chrome(options=chrome_options)
 
         response.get(url)
         sleep(5)
