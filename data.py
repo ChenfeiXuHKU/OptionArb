@@ -113,12 +113,20 @@ def get_data(begin, end, dim):
 
 if __name__=="__main__":  
 
-
+    training_months = range(12)
+    
+    # 9 months for training, left 3 months for testing
+    
+    # for 5 features
+    begin_ends_1 = [[]]
+    
+    # for 10 features
     begin = '2018-05-08'
     end = '2018-05-29'
     
     get_data(begin,end,5)
-    
+
+
     
     
     
