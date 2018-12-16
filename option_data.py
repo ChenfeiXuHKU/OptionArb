@@ -25,7 +25,7 @@ def get_code():
     chrome_options.add_argument('--disable-gpu')
     response = webdriver.Chrome(options=chrome_options)
     response.get(url)
-    sleep(20)
+    sleep(10)
     response.find_element_by_xpath('//*[@id="lhkexw-singlestocklanding"]/section/div[2]/div/div[3]/div[2]/div[1]/span').click()
 
     l = response.find_elements_by_xpath('//*[@id="lhkexw-singlestocklanding"]/section/div[2]/div/div[3]/div[2]/div[2]/div')
@@ -76,7 +76,6 @@ def get_option(code, underlying, o_data, u_time, expiry, maturity, hsi_price):
     summary_data.update({'Closing':price})
     summary_data.update({'Change':net_change})
     summary_data.update({'Change(%)':change_per})
-    #summary_data.update({'U/D(B)':u_d})
     
     url = "http://www.hkex.com.hk/eng/stat/dmstat/dayrpt/hsio{0}.htm".format(u_time.replace("-", "")[2:])
 
@@ -163,7 +162,9 @@ def get_option(code, underlying, o_data, u_time, expiry, maturity, hsi_price):
         IV_1C = o_data[index_c].split()[8]
         IV_1P = o_data[index_p].split()[8]
         Strike = o_data[index_c].split()[1]
-
+        Volume_1C = o_data[index_c].split()[9]
+        Volume_1P = o_data[index_p].split()[9]
+        
         summary_data.update({'Strike':Strike})
 
         S_C = o_data[index_c].split()[6]        
@@ -177,12 +178,14 @@ def get_option(code, underlying, o_data, u_time, expiry, maturity, hsi_price):
         summary_data.update({'SV':round(s_vol,2)*100})
         summary_data.update({'IV(C)':IV_1C})
         summary_data.update({'IV(P)':IV_1P})
+        summary_data.update({'Volume(C)':Volume_1C.replace(',', '')})
+        summary_data.update({'Volume(P)':Volume_1P.replace(',', '')})
 
         r = 0.0015
         q = 0.0424
         Expiry = maturity
-        T = (Expiry - int(u_time[8:10].lstrip('0')))/365
-#        T = 32/365
+#        T = (Expiry - int(u_time[8:10].lstrip('0')))/365
+        T = 28/365
         theo_c_BI = binomialTree(price, s_vol, r, T, float(Strike), 3, 'C')
         theo_p_BI = binomialTree(price, s_vol, r, T, float(Strike), 3, 'P')
         
@@ -190,22 +193,6 @@ def get_option(code, underlying, o_data, u_time, expiry, maturity, hsi_price):
         theo_p_BS = price_option(price, float(Strike), r, q, s_vol, T, 1)
         
         if theo_c_BI[0] >= 0 and theo_p_BI[0] >= 0 and theo_c_BS >= 0 and theo_p_BS >= 0:
-        
-            theo_cm10 = binomialTree(price*0.9, float(IV_1C)/100, r, T, float(Strike), 3, 'C')
-            theo_cm5 = binomialTree(price*0.95, float(IV_1C)/100, r,  T,float(Strike), 3, 'C')
-            theo_cm1 = binomialTree(price*0.99, float(IV_1C)/100, r, T, float(Strike), 3, 'C')
-            theo_c0 = binomialTree(price, float(IV_1C)/100, r, T, float(Strike), 3, 'C')
-            theo_c1 = binomialTree(price*1.01, float(IV_1C)/100, r, T, float(Strike), 3, 'C')
-            theo_c5 = binomialTree(price*1.05, float(IV_1C)/100, r, T,float(Strike), 3, 'C')
-            theo_c10 = binomialTree(price*1.1, float(IV_1C)/100, r, T,float(Strike), 3, 'C')
-    
-            theo_pm10 = binomialTree(price*0.9, float(IV_1P)/100, r, T,float(Strike), 3, 'P')
-            theo_pm5 = binomialTree(price*0.95, float(IV_1P)/100, r,  T,float(Strike), 3, 'P')
-            theo_pm1 = binomialTree(price*0.99, float(IV_1P)/100, r,  T,float(Strike), 3, 'P')
-            theo_p0 =binomialTree(price, float(IV_1P)/100, r,  T,float(Strike), 3, 'P')
-            theo_p1 = binomialTree(price*1.01, float(IV_1P)/100, r, T, float(Strike), 3, 'P')
-            theo_p5 = binomialTree(price*1.05, float(IV_1P)/100, r, T, float(Strike), 3, 'P')
-            theo_p10 = binomialTree(price*1.1, float(IV_1P)/100, r, T, float(Strike), 3, 'P')
      
             summary_data.update({'Open(C)':O_C})
             summary_data.update({'Settle(C)':S_C})
@@ -228,34 +215,6 @@ def get_option(code, underlying, o_data, u_time, expiry, maturity, hsi_price):
                 
             summary_data.update({'T-Price(tree,P)':round(theo_p_BI[0],2)})
             summary_data.update({'T-Price(BS,P)':round(theo_p_BS,2)})
-            
-            #Add delta and vega
-            delta_c = get_delta(price, float(Strike), r, q, float(IV_1C)/100, T, 0)
-            delta_p = get_delta(price, float(Strike), r, q, float(IV_1P)/100, T, 1)
-    
-            vega_c = get_vega(price, float(Strike), r, q, float(IV_1C)/100, T)
-            vega_p = get_vega(price, float(Strike), r, q, float(IV_1P)/100, T)
-    
-            summary_data.update({'Delta(C)':round(delta_c,2)})
-            summary_data.update({'Delta(P)':round(delta_p,2)})
-            summary_data.update({'Vega(C)':round(vega_c,2)})
-            summary_data.update({'Vega(P)':round(vega_p,2)})
-            
-            summary_data.update({'P(-10%C)':round(theo_cm10[0],2)})
-            summary_data.update({'P(-5%C)':round(theo_cm5[0],2)})
-            summary_data.update({'P(-1%C)':round(theo_cm1[0],2)})
-            summary_data.update({'P(0%C)':round(theo_c0[0],2)})
-            summary_data.update({'P(1%C)':round(theo_c1[0],2)})
-            summary_data.update({'P(5%C)':round(theo_c5[0],2)})
-            summary_data.update({'P(10%C)':round(theo_c10[0],2)})
-    
-            summary_data.update({'P(-10%P)':round(theo_pm10[0],2)})
-            summary_data.update({'P(-5%P)':round(theo_pm5[0],2)})
-            summary_data.update({'P(-1%P)':round(theo_pm1[0],2)})
-            summary_data.update({'P(0%P)':round(theo_p0[0],2)})
-            summary_data.update({'P(1%P)':round(theo_p1[0],2)})
-            summary_data.update({'P(5%P)':round(theo_p5[0],2)})
-            summary_data.update({'P(10%P)':round(theo_p10[0],2)})
         
         else:
             summary_data.clear()
@@ -268,16 +227,12 @@ def get_option(code, underlying, o_data, u_time, expiry, maturity, hsi_price):
 
 def get_delta(S, K, r, q, sigma, T, t_o):
 
-    #(price, float(Strike), r, q, float(IV_1C)/100, T, 0)
     if sigma > 0 and T > 0:
         d1 = (math.log(S/K) + (r - q + 0.5*(sigma**2))*T)/(sigma*math.sqrt(T))
         if t_o == 0:
-
             delta = math.exp(-1*q*T)*norm.cdf(d1)
-
         else:
             delta = math.exp(-1*q*T)*(norm.cdf(d1)-1)
-
     else:
         delta = -1
 
@@ -286,18 +241,15 @@ def get_delta(S, K, r, q, sigma, T, t_o):
 
 def get_vega(S, K, r, q, sigma, T):
 
-    #(price, float(Strike), r, q, float(IV_1C)/100, T, 0)
     if sigma > 0 and T > 0:
         d1 = (math.log(S/K) + (r - q + 0.5*(sigma**2))*T)/(sigma*math.sqrt(T))
-
         vega = (1/100)*S*math.exp(-1*q*T)*math.sqrt(T)*(1/math.sqrt(2*math.pi))*math.exp(-1*d1*d1/2)
-
     else:
         vega = -1
 
     return vega
 
-#theo_c0 = binomialTree(price, float(IV_1C)/100, r, T, float(Strike), 3, 'C')
+
 def binomialTree(S0, volatility, rate, time, strike, steps, CorP):
     
     smallT = float(time)/steps
@@ -305,9 +257,6 @@ def binomialTree(S0, volatility, rate, time, strike, steps, CorP):
     if volatility != 0 and smallT > 0:
         up = math.exp(volatility * math.sqrt(smallT))
         down = 1.0 / up
-#        print(smallT)
-#        print(volatility)
-#        print(up)
         
         prob = (math.exp(rate * smallT) - down)/(up - down)
         
@@ -393,7 +342,7 @@ def price_option(S, K, r, q, sigma, T, t_o):
         d1 = (math.log(S/K) + (r - q + 0.5*(sigma**2))*T)/(sigma*math.sqrt(T))
         d2 = d1 - sigma*math.sqrt(T)
         
-        if t_o==0:
+        if t_o == 0:
             C = S*math.exp(-1*q*(T))*norm.cdf(d1) - K*math.exp(-1*r*(T))*norm.cdf(d2)
             return C
         else:
@@ -525,24 +474,23 @@ if __name__=="__main__":
 #    expiry_list = ['JAN18','FEB17','MAR17','APR17','MAY17','JUN17','JUL17','AUG17','SEP17','OCT17','NOV17','DEC17']
     maturity_list = [30,27,28,27,30,28,30,30,27,30,29, 28]
 #    maturity_list = [30,27,28,27,30,28, 28,30,28,30,29,28]
-    special_list = ['2017-07-31','2017-08-31','2017-09-29','2017-10-31','2017-11-30','2017-12-29', \
-                    '2018-01-31','2018-02-28','2018-03-29','2018-04-30', '2018-05-31', '2018-06-29', \
-                    '2018-07-31','2018-08-31','2018-09-28', \
-                    '2018-10-31', '2018-11-30']
     
+    special_list = ['2017-07-31','2017-08-31','2017-09-29','2017-10-31','2017-11-30','2017-12-29', \
+                    '2018-01-31','2018-02-28','2018-03-29','2018-04-30','2018-05-31','2018-06-29', \
+                    '2018-07-31','2018-08-31','2018-09-28','2018-10-31','2018-11-30']
     
 #    time_list_1 = ['2018-01-02','2018-01-03','2018-01-04','2018-01-05', \
 #                   '2018-01-08','2018-01-09','2018-01-10','2018-01-11','2018-01-12', \
 #                   '2018-01-15','2018-01-16','2018-01-17','2018-01-18','2018-01-19', \
 #                   '2018-01-22','2018-01-23','2018-01-24','2018-01-25','2018-01-26', \
 #                   '2018-01-29']
-#
+
 #    time_list_2 = ['2018-02-01','2018-02-02', \
 #                   '2018-02-05','2018-02-06','2018-02-07','2018-02-08','2018-02-09', \
 #                   '2018-02-12','2018-02-13','2018-02-14','2018-02-15', \
 #                   '2018-02-20','2018-02-21','2018-02-22','2018-02-23', \
 #                   '2018-02-26']
-#
+
 #    time_list_3 = ['2018-03-01','2018-03-02', \
 #                   '2018-03-05','2018-03-06','2018-03-07','2018-03-08','2018-03-09', \
 #                   '2018-03-12','2018-03-13','2018-03-14','2018-03-15','2018-03-16', \
@@ -555,8 +503,8 @@ if __name__=="__main__":
 #                   '2018-04-23','2018-04-24','2018-04-25','2018-04-26']
 
 #    time_list_5 = ['2018-05-02','2018-05-03','2018-05-04', \
-#                   '2018-05-07','2018-05-08','2018-05-09','2018-05-10','2018-05-11', \
-#                   '2018-05-14','2018-05-15','2018-05-16', '2018-05-17', '2018-05-18', \
+#                   '2018-05-07','2018-05-08','2018-05-09','2018-05-10',2018-05-11', \
+#                   '2018-05-14','2018-05-15','2018-05-16','2018-05-17','2018-05-18', \
 #                   '2018-05-21','2018-05-23','2018-05-24','2018-05-25', \
 #                   '2018-05-28','2018-05-29']
     
@@ -578,12 +526,12 @@ if __name__=="__main__":
 #                   '2017-07-24','2017-07-25','2017-07-26','2017-07-27', \
 #                   ]
     
-    time_list_8 = ['2018-08-01','2018-08-02','2018-08-03',\
-                   '2018-08-06','2018-08-07','2018-08-08','2018-08-09','2018-08-10', \
-                   '2018-08-13','2018-08-14','2018-08-15','2018-08-16','2018-08-17', \
-                   '2018-08-20','2018-08-21','2018-08-22','2018-08-23','2018-08-24', \
-                   '2018-08-27','2018-08-28','2018-08-29']
-#
+#    time_list_8 = ['2018-08-01','2018-08-02','2018-08-03',\
+#                   '2018-08-06','2018-08-07','2018-08-08','2018-08-09','2018-08-10', \
+#                   '2018-08-13','2018-08-14','2018-08-15','2018-08-16','2018-08-17', \
+#                   '2018-08-20','2018-08-21','2018-08-22','2018-08-23','2018-08-24', \
+#                   '2018-08-27','2018-08-28','2018-08-29']
+
 #    time_list_8 = ['2017-08-01','2017-08-02','2017-08-03','2017-08-04',\
 #                   '2017-08-07','2017-08-08','2017-08-09','2017-08-10','2017-08-11',\
 #                   '2017-08-14','2017-08-15','2017-08-16','2017-08-17','2017-08-18', \
@@ -592,7 +540,8 @@ if __name__=="__main__":
 
 #    time_list_9 = ['2018-09-03','2018-09-04','2018-09-05','2018-09-06','2018-09-07', \
 #                   '2018-09-10','2018-09-11','2018-09-12','2018-09-13','2018-09-14', \
-#                   '2018-09-17','2018-09-18','2018-09-19','2018-09-20','2018-09-21', \
+#                   '2018-09-17','2018-09-18','2018-09-19',
+#                   '2018-09-20','2018-09-21', \
 #                   '2018-09-24','2018-09-26']
     
 #    time_list_9 = ['2017-09-01', \
@@ -631,17 +580,16 @@ if __name__=="__main__":
 #                   '2017-12-18','2017-12-19','2017-12-20','2017-12-21','2017-12-22', \
 #                   '2017-12-27']  
 
+    time_list_special = ['2018-11-30']
     
-    time_list_special = ['2017-12-29']
-    
-    for u_time in time_list_8:
+    for u_time in time_list_special:
         
         m = int(u_time[5:7].lstrip('0'))
         
         if u_time in special_list:
-            expiry = expiry_list[m%12]
+            expiry = expiry_list[m % 12]
         else:
-            expiry = expiry_list[(m-1)%12]
+            expiry = expiry_list[(m-1) % 12]
         
         HSI_close = pd.read_excel("HSI.xlsx")
         index = HSI_close[(HSI_close['Date'] == u_time)].index.tolist()[0]
@@ -655,7 +603,7 @@ if __name__=="__main__":
         response = webdriver.Chrome(options=chrome_options)
 
         response.get(url)
-        sleep(5)
+        sleep(3)
 
         data = pd.DataFrame()
         cols=[]
