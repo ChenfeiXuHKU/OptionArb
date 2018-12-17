@@ -470,10 +470,10 @@ if __name__=="__main__":
 
     code, underlying = get_code()
 
-    expiry_list = ['JAN18','FEB18','MAR18','APR18','MAY18','JUN18','JUL18','AUG18','SEP18','OCT18','NOV18','DEC18']
-#    expiry_list = ['JAN18','FEB17','MAR17','APR17','MAY17','JUN17','JUL17','AUG17','SEP17','OCT17','NOV17','DEC17']
-    maturity_list = [30,27,28,27,30,28,30,30,27,30,29, 28]
-#    maturity_list = [30,27,28,27,30,28, 28,30,28,30,29,28]
+#    expiry_list = ['JAN18','FEB18','MAR18','APR18','MAY18','JUN18','JUL18','AUG18','SEP18','OCT18','NOV18','DEC18']
+    expiry_list = ['JAN18','FEB17','MAR17','APR17','MAY17','JUN17','JUL17','AUG17','SEP17','OCT17','NOV17','DEC17']
+#    maturity_list = [30,27,28,27,30,28,30,30,27,30,29, 28]
+    maturity_list = [30,27,28,27,30,28, 28,30,28,30,29,28]
     
     special_list = ['2017-07-31','2017-08-31','2017-09-29','2017-10-31','2017-11-30','2017-12-29', \
                     '2018-01-31','2018-02-28','2018-03-29','2018-04-30','2018-05-31','2018-06-29', \
@@ -580,7 +580,7 @@ if __name__=="__main__":
 #                   '2017-12-18','2017-12-19','2017-12-20','2017-12-21','2017-12-22', \
 #                   '2017-12-27']  
 
-    time_list_special = ['2018-11-30']
+    time_list_special = ['2017-11-30']
     
     for u_time in time_list_special:
         
