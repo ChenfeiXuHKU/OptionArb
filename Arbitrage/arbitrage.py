@@ -4,8 +4,11 @@ import numpy as np
 from datetime import datetime 
 from datetime import timedelta
 import os
+import sys
+sys.path.append(r"C:\Users\chenf\Desktop\GITS\OptionArb")
+import utils as ut
 
-def StatArb(begin, end, number, option_info, fund):
+def StatArb(begin, end, number, option_info, fund, Long_fund, Short_fund):
         	
     Return = []
     Long_Return = []
@@ -14,9 +17,6 @@ def StatArb(begin, end, number, option_info, fund):
     fund_cum = []
     long_fund_cum = []
     short_fund_cum = []
-    
-    Long_fund = fund
-    Short_fund = fund
     
     while begin != end:
         portfolio = searchPortfolio(begin, number)
@@ -214,91 +214,82 @@ def searchPortfolio(begin, number):
     return portfolio
 
 
-def Calcuate_performance_indicators(return_data, period, type_s):
-    #总收益
-    Total_return=(return_data+1).cumprod(axis=0)[-1]-1
-    #平均日收益
-    Average_return = return_data.mean()
-    #年化收益
-    Annualized_Return = (return_data+1).cumprod(axis=0)[-1]**(365/len(return_data))-1
-    #年化波动率：如果用月收益,年化应该乘以12的平方根
-    Annualized_Volatility = return_data.std(axis=0)*period**0.5
-    #年化夏普比
-    Sharp = Annualized_Return/Annualized_Volatility
-    #年化sortino比率
-    down_return_data = []
-    for r in return_data:
-        if r < 0:
-            down_return_data.append(r)
-    Annualized_Down_Volatility = np.array(down_return_data).std(axis=0)*period**0.5
-    Sortino = Annualized_Return/Annualized_Down_Volatility
-    #最大回撤
-    Maxdrawndown=[]
-    l=[]
-    for j in range(len(return_data)):
-        l.append(((return_data+1).cumprod(axis=0)[j]-(return_data+1).cumprod(axis=0)[:j].max())/(return_data+1).cumprod(axis=0)[:j].max())
-    Maxdrawndown.append(np.nanmin(np.array(l)));
-
-    indis = [Total_return,Average_return,Annualized_Return,Annualized_Volatility,Sharp,Maxdrawndown[0],Sortino]
-
-    df = pd.DataFrame(index = [type_s], columns=['TotalReturn','AverageReturn','AnnualizedReturn',\
-                      'AnnualizedVol','Sharpe','MaxDrawdown','Sortino','Calmar','WinRate','P/L Ratio','MaxProfit','MaxLoss'])
-    df['TotalReturn']=indis[0]
-    df['AverageReturn']=indis[1]
-    df['AnnualizedReturn']=indis[2]
-    df['AnnualizedVol']=indis[3]
-    df['Sharpe']=indis[4]
-    df['MaxDrawdown']=indis[5]
-    df['Sortino']=indis[6]
-    
-    df["Calmar"] =  -df['AnnualizedReturn']/df['MaxDrawdown']
-    df["WinRate"] = sum(np.where(return_data > 0, 1, 0)) /sum(np.where(return_data == 0, 0, 1))
-    df["P/L Ratio"] = -np.nanmean(return_data[return_data>0])/np.nanmean(return_data[return_data<0])
-    df["MaxProfit"] = return_data.max()
-    df["MaxLoss"] = return_data.min()
-   
-    return(df)
-
 #%%
 option_info=pd.read_excel('../option_info.xlsx') 
 
-begin = '2017-12-29'
-end = '2018-01-29'
+begin_ends = [
+            ['2017-12-29','2018-01-29'],
+            ['2018-01-31','2018-02-26'],
+            ['2018-02-28','2018-03-27'],
+            ['2018-03-29','2018-04-26'],
+            ['2018-04-30','2018-05-29'],
+            ['2018-05-31','2018-06-27'],
+            ['2018-06-29','2018-07-27'],
+            ['2018-07-31','2018-08-29'],
+            ['2018-08-31','2018-09-26'],
+            ['2018-09-28','2018-10-29'],
+            ['2018-10-31','2018-11-28'],
+            ['2018-11-30','2018-12-27'],
+            ]
 
-fund = 100000
+names = ['2017-12','2018-01','2018-02','2018-03',\
+         '2018-04','2018-05','2018-06','2018-07',\
+         '2018-08','2018-09','2018-10','2018-11',]
 
-Period,fund_cum,Return,long_fund_cum,Long_Return,\
-    short_fund_cum,Short_Return = StatArb(begin, end, 10, option_info, fund)
+option_info=pd.read_excel('../option_info.xlsx') 
+Fund = 100000
+Long_fund = 100000
+Short_fund = 100000
+number = 20 #choose how many options
 
-data = pd.DataFrame(index = Period, columns=['FundCum','Return','LongFundCum','LongReturn','ShortFundCum','ShortReturn'])
-data['FundCum']=np.array(fund_cum)
-data['Return']=np.array(Return)
-data['LongFundCum']=np.array(long_fund_cum)
-data['LongReturn']=np.array(Long_Return)
-data['ShortFundCum']=np.array(short_fund_cum)
-data['ShortReturn']=np.array(Short_Return)
+all_Return = []
+all_Long_Return = []
+all_Short_Return = []
+all_Period = []
+all_fund_cum = []
+all_long_fund_cum = []
+all_short_fund_cum = []
 
-indicators = Calcuate_performance_indicators(data['Return'], 252, 'Long-Short')
-indicators_long = Calcuate_performance_indicators(data['LongReturn'], 252, 'Long')
-indicators_short = Calcuate_performance_indicators(data['ShortReturn'], 252, 'Short')
+for i in range(len(begin_ends)):
+    temp_Period,temp_fund_cum,temp_Return,temp_long_fund_cum,temp_Long_Return,\
+    temp_short_fund_cum,temp_Short_Return = StatArb(begin_ends[i][0], begin_ends[i][1],\
+                                                    number, option_info, Fund, Long_fund, Short_fund)
+
+    Fund = temp_fund_cum[-1]
+    Long_fund = temp_long_fund_cum[-1]
+    Short_fund = temp_short_fund_cum[-1]
+    
+    all_Return = all_Return + temp_Return
+    all_Long_Return = all_Long_Return + temp_Long_Return
+    all_Short_Return = all_Short_Return + temp_Short_Return
+    all_Period = all_Period + temp_Period
+    all_fund_cum = all_fund_cum + temp_fund_cum
+    all_long_fund_cum = all_long_fund_cum + temp_long_fund_cum
+    all_short_fund_cum = all_short_fund_cum + temp_short_fund_cum
+    
+data = pd.DataFrame(index = all_Period, columns=['FundCum','Return','LongFundCum','LongReturn','ShortFundCum','ShortReturn'])
+data['FundCum']=np.array(all_fund_cum)
+data['Return']=np.array(all_Return)
+data['LongFundCum']=np.array(all_long_fund_cum)
+data['LongReturn']=np.array(all_Long_Return)
+data['ShortFundCum']=np.array(all_short_fund_cum)
+data['ShortReturn']=np.array(all_Short_Return)
+
+indicators = ut.Calcuate_performance_indicators(data['Return'], 252, 'Long-Short')
+indicators_long = ut.Calcuate_performance_indicators(data['LongReturn'], 252, 'Long')
+indicators_short = ut.Calcuate_performance_indicators(data['ShortReturn'], 252, 'Short')
 
 indis = (indicators.append(indicators_long)).append(indicators_short)
 
 print(indicators.T)
 
-name='Results(5, BinomialTree)'
+name='Results('+str(number)+'options, BinomialTree)'
 wbw = pd.ExcelWriter(name+'.xlsx')
 data.to_excel(wbw, 'PnL')
 indis.to_excel(wbw, 'Indicators')
 
 wbw.save()
 wbw.close()
-
-
-
-
-
-
 
 
 
