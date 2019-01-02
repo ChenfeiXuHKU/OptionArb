@@ -185,7 +185,7 @@ def get_option(code, underlying, o_data, u_time, expiry, maturity, hsi_price):
         q = 0.0424
         Expiry = maturity
 #        T = (Expiry - int(u_time[8:10].lstrip('0')))/365
-        T = 28/365
+        T = 30/365
         theo_c_BI = binomialTree(price, s_vol, r, T, float(Strike), 3, 'C')
         theo_p_BI = binomialTree(price, s_vol, r, T, float(Strike), 3, 'P')
         
@@ -470,14 +470,14 @@ if __name__=="__main__":
 
     code, underlying = get_code()
 
-#    expiry_list = ['JAN18','FEB18','MAR18','APR18','MAY18','JUN18','JUL18','AUG18','SEP18','OCT18','NOV18','DEC18']
-    expiry_list = ['JAN18','FEB17','MAR17','APR17','MAY17','JUN17','JUL17','AUG17','SEP17','OCT17','NOV17','DEC17']
-#    maturity_list = [30,27,28,27,30,28,30,30,27,30,29, 28]
-    maturity_list = [30,27,28,27,30,28, 28,30,28,30,29,28]
+    expiry_list = ['JAN19','FEB18','MAR18','APR18','MAY18','JUN18','JUL18','AUG18','SEP18','OCT18','NOV18','DEC18']
+#    expiry_list = ['JAN18','FEB17','MAR17','APR17','MAY17','JUN17','JUL17','AUG17','SEP17','OCT17','NOV17','DEC17']
+    maturity_list = [30,27,28,27,30,28,30,30,27,30,29,28]
+#    maturity_list = [30,27,28,27,30,28, 28,30,28,30,29,28]
     
     special_list = ['2017-07-31','2017-08-31','2017-09-29','2017-10-31','2017-11-30','2017-12-29', \
                     '2018-01-31','2018-02-28','2018-03-29','2018-04-30','2018-05-31','2018-06-29', \
-                    '2018-07-31','2018-08-31','2018-09-28','2018-10-31','2018-11-30']
+                    '2018-07-31','2018-08-31','2018-09-28','2018-10-31','2018-11-30','2018-12-31']
     
 #    time_list_1 = ['2018-01-02','2018-01-03','2018-01-04','2018-01-05', \
 #                   '2018-01-08','2018-01-09','2018-01-10','2018-01-11','2018-01-12', \
@@ -579,8 +579,13 @@ if __name__=="__main__":
 #                   '2017-12-11','2017-12-12','2017-12-13','2017-12-14','2017-12-15', \
 #                   '2017-12-18','2017-12-19','2017-12-20','2017-12-21','2017-12-22', \
 #                   '2017-12-27']  
+    
+    time_list_12 = ['2018-12-03','2018-12-04','2018-12-05','2018-12-06','2018-12-07', \
+                    '2018-12-10','2018-12-11','2018-12-12','2018-12-13','2018-12-14', \
+                    '2018-12-17','2018-12-18','2018-12-19','2018-12-20','2018-12-21', \
+                    '2018-12-24','2018-12-27']
 
-    time_list_special = ['2017-11-30']
+    time_list_special = ['2018-12-31']
     
     for u_time in time_list_special:
         
@@ -625,7 +630,7 @@ if __name__=="__main__":
         if not os.path.exists('option_data/'):
             os.makedirs('option_data/')
 
-        file_name = 'option_data' + '/option_' + u_time
+        file_name = 'option_data/' + 'option_' + u_time
         data.to_csv(file_name + '.csv', sep=',', na_rep='N/A', columns=cols, index=False)
 
 
