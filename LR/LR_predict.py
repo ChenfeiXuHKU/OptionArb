@@ -17,10 +17,10 @@ import utils as ut
 
 def Predict(begin, end, dim, number, w, b, option_info, fund, Long_fund, Short_fund):
 
+    Period = []
     Return = []
     Long_Return = []
     Short_Return = []
-    Period = []
     fund_cum = []
     long_fund_cum = []
     short_fund_cum = []
@@ -57,7 +57,6 @@ def Predict(begin, end, dim, number, w, b, option_info, fund, Long_fund, Short_f
                 long_settle, long_open = arb_data.loc[long_i,'Settle(P)'],arb_data.loc[long_i,'Open(P)']
                 short_settle, short_open = arb_data.loc[short_i,'Settle(P)'],arb_data.loc[short_i,'Open(P)']
             
-            #close2-close1 as need
             last_long_settle = portfolio['1'][2][i]
             last_short_settle = portfolio['-1'][2][i]            
             long_info = option_info[(option_info['Option Code'] == portfolio['1'][0][i])].index.tolist()[0]   			 
@@ -71,11 +70,10 @@ def Predict(begin, end, dim, number, w, b, option_info, fund, Long_fund, Short_f
                     long_fee = 1
                 elif option_info.loc[long_info,'Tier']==3:
                     long_fee = 0.5       
-#                long_fund = long_fund + long_open*option_info.loc[long_info,'Contract Size'] + long_fee
+
                 long_fund = long_fund + last_long_settle*option_info.loc[long_info,'Contract Size'] + long_fee
-#                long_pnl = long_pnl + (long_settle - long_open)*option_info.loc[long_info,'Contract Size'] - 2*long_fee
-                long_pnl = long_pnl + (long_settle - last_long_settle)*option_info.loc[long_info,'Contract Size'] - 2*long_fee
-    
+                long_pnl = long_pnl + (long_settle - last_long_settle)*option_info.loc[long_info,'Contract Size'] - 2*long_fee               
+                
             #short side
             if short_open > 0 and short_settle > 0:
                 if option_info.loc[short_info,'Tier']==1:
@@ -83,18 +81,11 @@ def Predict(begin, end, dim, number, w, b, option_info, fund, Long_fund, Short_f
                 elif option_info.loc[short_info,'Tier']==2:
                     short_fee = 1
                 elif option_info.loc[short_info,'Tier']==3:
-                    short_fee = 0.5            
-#                short_fund = short_fund + short_open*option_info.loc[short_info,'Contract Size'] + short_fee
+                    short_fee = 0.5        
+                    
                 short_fund = short_fund + last_short_settle*option_info.loc[short_info,'Contract Size'] + short_fee
-#                short_pnl = short_pnl - (short_settle - short_open)*option_info.loc[short_info,'Contract Size'] - 2*short_fee
                 short_pnl = short_pnl - (short_settle - last_short_settle)*option_info.loc[short_info,'Contract Size'] - 2*short_fee
     
-#            if short_fund>0:
-#                print('short size:'+str(option_info.loc[short_info,'Contract Size']))
-#                print('short fund:'+str(short_fund))
-#            if long_fund>0:
-#                print('long size:'+str(option_info.loc[long_info,'Contract Size']))
-#                print('long fund:'+str(long_fund))
         print('--------------------------')
         if long_fund > 0 and short_fund > 0:
             pnl = long_pnl + short_pnl
@@ -138,163 +129,16 @@ def Predict(begin, end, dim, number, w, b, option_info, fund, Long_fund, Short_f
                 
 
 def SearchPortfolio(begin, dim, number, w, b):
+    
     portfolio = {}
     Predict_data = OrderedDict() 
-    data = pd.read_csv('../option_data/option_' + begin + '.csv')
-    #for call options one day
-    for i in range(len(data)):
-        code = data.loc[i,'Option Code']
-        if data.loc[i,'Change(C%)'] == '-':
-            continue
-        if data.loc[i,'Change(HSIo,C%)'] == '-':
-            continue
-            
-        inputs = []    
-        days = 0
-        temp_date = begin
-        while(days < dim):
-            #search previous trading day
-            current_date = datetime.strptime(temp_date,'%Y-%m-%d')
-            count = 1
-            last_date = str(current_date - timedelta(days = count))
-            while((not os.path.exists('../option_data/option_'+ last_date[0:10] + '.csv')) and last_date[0:10] >= '2017-07-03'):
-                count = count + 1
-                last_date = str(current_date - timedelta(days = count))
-            u_time = last_date[0:10]
-            last_data = pd.read_csv('../option_data/option_' + u_time + '.csv')
-               
-            #get max change value at that day
-            changes_c = last_data['Change(C%)'].tolist()
-            while '-' in changes_c:
-                changes_c.remove('-')
-            temp_changes_c_max = max([float(cc) for cc in changes_c])
-            temp_changes_c_min = min([float(cc) for cc in changes_c])
-            #get change value for one option at that day
-            try:
-                last_index = last_data[(last_data['Option Code'] == code)].index.tolist()[0] 
-            except:
-                break
-            if last_data.loc[last_index,'Change(C%)'] == '-':
-                break
-            else:
-                temp_C_change = float(last_data.loc[last_index,'Change(C%)'])  
-            #normalize change value and store
-            if temp_changes_c_max == 0:
-                c_scale = abs(temp_changes_c_min)
-                inputs.append(temp_C_change / c_scale)        
-            elif temp_changes_c_min == 0:
-                c_scale = abs(temp_changes_c_max)
-                inputs.append(temp_C_change / c_scale)
-            else:
-                if temp_C_change >= 0:
-                    c_scale = abs(temp_changes_c_max)
-                else:
-                    c_scale = abs(temp_changes_c_min)
-                inputs.append(temp_C_change / c_scale)
+    data = pd.read_csv('../predict_data/predict_data_' + str(dim) + 'd_' + begin + '.csv')
+    
+    #predict probs
+    for i in range(data.shape[1]):
+        prob = ut.sigmoid(np.sum(np.multiply(w,data.iloc[:,i].values)) + b)
+        Predict_data.update({data.columns[i]:prob})      
 
-            #get max volume at that day
-            volumes_c = last_data['Volume(C)'].tolist()
-            while '-' in volumes_c:
-                volumes_c.remove('-')
-            temp_c_vol_max = max([int(str(vc).replace(',','')) for vc in volumes_c])    
-            #get volume for above option at that day
-            if last_data.loc[last_index,'Volume(C)'] == '-':
-                break
-            else:
-                temp_C_volume = int(str(last_data.loc[last_index,'Volume(C)']).replace(',',''))
-            #normalize volume
-            if temp_c_vol_max == 0:
-                inputs.append(0)        
-            else:
-                inputs.append(temp_C_volume / abs(temp_c_vol_max))
-           
-            #get last settle
-            if days == 0:
-                last_settle = last_data.loc[last_index,'Settle(C)']
-
-            days = days + 1
-            temp_date = u_time          
-            
-        if len(inputs) == (dim*2):           
-            prob = ut.sigmoid(np.sum(np.multiply(w,np.array(inputs))) + b)
-            Predict_data.update({code+'_C_'+str(last_settle):prob})      
-                
-    #for put options one day
-    for i in range(len(data)):
-        code = data.loc[i,'Option Code']
-        if data.loc[i,'Change(P%)'] == '-':
-            continue
-        if data.loc[i,'Change(HSIo,P%)'] == '-':
-            continue
-
-        inputs = []   
-        days = 0
-        temp_date = begin
-        while(days < dim):
-            #search previous trading day
-            current_date = datetime.strptime(temp_date,'%Y-%m-%d')
-            count = 1
-            last_date = str(current_date - timedelta(days = count))
-            while((not os.path.exists('../option_data/option_'+ last_date[0:10] + '.csv')) and last_date[0:10] >= '2017-07-03'):
-                count = count + 1
-                last_date = str(current_date - timedelta(days = count))
-            u_time = last_date[0:10]
-            last_data = pd.read_csv('../option_data/option_' + u_time + '.csv')
-            #get max change value at that day
-            changes_p = last_data['Change(P%)'].tolist()
-            while '-' in changes_p:
-                changes_p.remove('-')
-            temp_changes_p_max = max([float(cp) for cp in changes_p])
-            temp_changes_p_min = min([float(cp) for cp in changes_p])
-            #get change value for one option at that day
-            try:
-                last_index = last_data[(last_data['Option Code'] == code)].index.tolist()[0] 
-            except:
-                break
-            if last_data.loc[last_index,'Change(P%)'] == '-':
-                break
-            else:
-                temp_P_change = float(last_data.loc[last_index,'Change(P%)'])
-            #normalize change value and store
-            if temp_changes_p_max == 0:
-                p_scale = abs(temp_changes_p_min)
-                inputs.append(temp_P_change / p_scale)       
-            elif temp_changes_p_min == 0:
-                p_scale = abs(temp_changes_p_max)
-                inputs.append(temp_P_change / p_scale) 
-            else:
-                if temp_P_change >= 0:
-                    p_scale = abs(temp_changes_p_max)
-                else:
-                    p_scale = abs(temp_changes_p_min)
-                inputs.append(temp_P_change / p_scale) 
-            
-            #get max volume at that day
-            volumes_p = last_data['Volume(P)'].tolist()
-            while '-' in volumes_p:
-                volumes_p.remove('-')
-            temp_p_vol_max = max([int(str(vp).replace(',','')) for vp in volumes_p])
-            #get volume for above option at that day
-            if last_data.loc[last_index,'Volume(P)'] == '-':
-                break
-            else:
-                temp_P_volume = int(str(last_data.loc[last_index,'Volume(P)']).replace(',',''))
-            #normalize volume
-            if temp_p_vol_max == 0:
-                inputs.append(0)        
-            else:
-                inputs.append(temp_P_volume / abs(temp_p_vol_max))
-                
-            if days == 0:
-                last_settle = last_data.loc[last_index,'Settle(P)']
-
-            days = days + 1
-            temp_date = u_time
-            
-        if len(inputs) == (dim*2):          
-            prob = ut.sigmoid(np.sum(np.multiply(w,np.array(inputs))) + b)
-            Predict_data.update({code+'_P_'+str(last_settle):prob})
-                
     #sort
     if Predict_data:
         longs = []
@@ -362,8 +206,8 @@ option_info=pd.read_excel('../option_info.xlsx')
 Fund = 100000
 Long_fund = 100000
 Short_fund = 100000
-number = 1 #choose how many options
-dim = 5 #feature dim
+number = 15 #choose how many options
+dim = 10 #feature dim
 
 all_Return = []
 all_Long_Return = []
@@ -373,13 +217,13 @@ all_fund_cum = []
 all_long_fund_cum = []
 all_short_fund_cum = []
 
-for i in range(len(begin_ends_5)):
+for i in range(len(begin_ends_10)):
     
     w = np.loadtxt('w_mini_' + str(dim) + '_' + names[i] + '.txt')
     b = np.loadtxt('b_mini_' + str(dim) + '_' + names[i] + '.txt')
 
     temp_Period,temp_fund_cum,temp_Return,temp_long_fund_cum,temp_Long_Return,\
-        temp_short_fund_cum,temp_Short_Return = Predict(begin_ends_5[i][0], begin_ends_5[i][1], \
+        temp_short_fund_cum,temp_Short_Return = Predict(begin_ends_10[i][0], begin_ends_10[i][1], \
                                                         dim, number, w, b, option_info, Fund, Long_fund, Short_fund)
     
     Fund = temp_fund_cum[-1]
@@ -410,7 +254,7 @@ indis = (indicators.append(indicators_long)).append(indicators_short)
     
 print(indicators.T)
     
-name='Results2(mini,'+str(number)+'options'+','+str(dim)+', LR)'
+name='Results(mini, '+str(number)+'options, '+str(dim)+', LR)'
 wbw = pd.ExcelWriter(name+'.xlsx')
 data.to_excel(wbw, 'PnL')
 indis.to_excel(wbw, 'Indicators')

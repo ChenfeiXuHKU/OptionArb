@@ -95,7 +95,7 @@ names = ['2017-12','2018-01','2018-02','2018-03',\
          '2018-04','2018-05','2018-06','2018-07',\
          '2018-08','2018-09','2018-10','2018-11',]
 number = 5
-iterations = 100
+iterations = 1000
 learning_rate = 0.1
 
 for name in names:
@@ -104,8 +104,8 @@ for name in names:
     dim = train_set.shape[0] - 1
     w, b = initialize_with_zeros(dim)
     
-    batch_size = 50
-#    batch_size = train_set.shape[1]
+#    batch_size = 50
+    batch_size = train_set.shape[1]
     for i in range(iterations):
         random_index = np.random.permutation(train_set.shape[1]).tolist()       
         batch_count = 0
@@ -137,8 +137,8 @@ for name in names:
     w = d['w']
     b = np.reshape(np.array([d['b']]), (1,1))
         
-    np.savetxt('w_mini_' + str(number) + '_' + name + '.txt', w, fmt='%0.8f')
-    np.savetxt('b_mini_'+ str(number) + '_' + name + '.txt', b, fmt='%0.8f')
+    np.savetxt('w_batch_' + str(number) + '_' + name + '.txt', w, fmt='%0.8f')
+    np.savetxt('b_batch_'+ str(number) + '_' + name + '.txt', b, fmt='%0.8f')
     
 
 

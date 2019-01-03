@@ -37,7 +37,9 @@ def StatArb(begin, end, number, option_info, fund, Long_fund, Short_fund):
         pnl = 0
         long_fee = 0
         short_fee = 0
-            
+        print(begin)
+        print(portfolio)
+        print('---------------------------------')
         for i in range(number):
             long_i = arb_data[(arb_data['Option Code'] == portfolio['1'][0][i])].index.tolist()[0]   			 
             short_i = arb_data[(arb_data['Option Code'] == portfolio['-1'][0][i])].index.tolist()[0]
@@ -58,6 +60,8 @@ def StatArb(begin, end, number, option_info, fund, Long_fund, Short_fund):
                 long_settle, long_open = arb_data.loc[long_i,'Settle(P)'],arb_data.loc[long_i,'Open(P)']
                 short_settle, short_open = arb_data.loc[short_i,'Settle(P)'],arb_data.loc[short_i,'Open(P)']
             
+            last_long_settle = portfolio['1'][2][i]
+            last_short_settle = portfolio['-1'][2][i]
             long_info = option_info[(option_info['Option Code'] == portfolio['1'][0][i])].index.tolist()[0]   			 
             short_info = option_info[(option_info['Option Code'] == portfolio['-1'][0][i])].index.tolist()[0]        
             
@@ -69,8 +73,11 @@ def StatArb(begin, end, number, option_info, fund, Long_fund, Short_fund):
                     long_fee = 1
                 elif option_info.loc[long_info,'Tier']==3:
                     long_fee = 0.5       
-                long_fund = long_fund + long_open*option_info.loc[long_info,'Contract Size'] + long_fee
-                long_pnl = long_pnl + (long_settle - long_open)*option_info.loc[long_info,'Contract Size'] - 2*long_fee
+#                long_fund = long_fund + long_open*option_info.loc[long_info,'Contract Size'] + long_fee
+                long_fund = long_fund + last_long_settle*option_info.loc[long_info,'Contract Size'] + long_fee
+#                long_pnl = long_pnl + (long_settle - long_open)*option_info.loc[long_info,'Contract Size'] - 2*long_fee
+#                long_pnl = long_pnl + (long_settle - last_long_settle)*option_info.loc[long_info,'Contract Size'] - 2*long_fee
+                long_pnl = long_pnl + (long_open - last_long_settle)*option_info.loc[long_info,'Contract Size'] - 2*long_fee
                 
             #short side
             if short_open > 0 and short_settle > 0:
@@ -80,9 +87,12 @@ def StatArb(begin, end, number, option_info, fund, Long_fund, Short_fund):
                     short_fee = 1
                 elif option_info.loc[short_info,'Tier']==3:
                     short_fee = 0.5            
-                short_fund = short_fund + short_open*option_info.loc[short_info,'Contract Size'] + short_fee
-                short_pnl = short_pnl - (short_settle - short_open)*option_info.loc[short_info,'Contract Size'] - 2*short_fee
-            
+#                short_fund = short_fund + short_open*option_info.loc[short_info,'Contract Size'] + short_fee
+                short_fund = short_fund + last_short_settle*option_info.loc[short_info,'Contract Size'] + short_fee
+#                short_pnl = short_pnl - (short_settle - short_open)*option_info.loc[short_info,'Contract Size'] - 2*short_fee
+#                short_pnl = short_pnl - (short_settle - last_short_settle)*option_info.loc[short_info,'Contract Size'] - 2*short_fee
+                short_pnl = short_pnl - (short_open - last_short_settle)*option_info.loc[short_info,'Contract Size'] - 2*short_fee
+
 #            if short_fund>0:
 #                print('short size:'+str(option_info.loc[short_info,'Contract Size']))
 #                print('short fund:'+str(short_fund))
@@ -148,8 +158,6 @@ def searchPortfolio(begin, number):
             
     longs = [] 
     shorts = []
-    long_strikes = []
-    short_strikes = []
     long_settles = []
     short_settles = []
     long_types = []
@@ -188,28 +196,24 @@ def searchPortfolio(begin, number):
     for i in range(number):
         if long_index[i] < border:# long calls
             longs.append(data.loc[long_index[i],'Option Code'])
-            long_strikes.append(float(data.loc[long_index[i],'Strike']))
             long_settles.append(float(data.loc[long_index[i],'Settle(C)']))
             long_types.append('C')
         else:# long puts
             longs.append(data.loc[long_index[i],'Option Code'])
-            long_strikes.append(float(data.loc[long_index[i],'Strike']))
             long_settles.append(float(data.loc[long_index[i],'Settle(P)']))
             long_types.append('P')
                 
         if short_index[i] < border:
             shorts.append(data.loc[short_index[i],'Option Code'])
-            short_strikes.append(float(data.loc[short_index[i],'Strike']))
             short_settles.append(float(data.loc[short_index[i],'Settle(C)']))
             short_types.append('C')
         else:
             shorts.append(data.loc[short_index[i],'Option Code'])
-            short_strikes.append(float(data.loc[short_index[i],'Strike']))
             short_settles.append(float(data.loc[short_index[i],'Settle(P)']))
             short_types.append('P')
                 
-    portfolio['1'] = [longs, long_types, long_strikes, long_settles]
-    portfolio['-1'] = [shorts, short_types, short_strikes, short_settles]
+    portfolio['1'] = [longs, long_types, long_settles]
+    portfolio['-1'] = [shorts, short_types, short_settles]
     
     return portfolio
 
@@ -283,7 +287,7 @@ indis = (indicators.append(indicators_long)).append(indicators_short)
 
 print(indicators.T)
 
-name='Results('+str(number)+'options, BinomialTree)'
+name='Results(open-close, '+str(number)+'options, BinomialTree)'
 wbw = pd.ExcelWriter(name+'.xlsx')
 data.to_excel(wbw, 'PnL')
 indis.to_excel(wbw, 'Indicators')
