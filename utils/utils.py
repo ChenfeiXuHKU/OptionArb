@@ -13,6 +13,12 @@ def sigmoid(z):
 
     return s
 
+def relu(z):
+    
+    s = np.maximum(z, 0)
+    
+    return s
+
 def Calcuate_performance_indicators(return_data, period, type_s):
     #总收益
     Total_return=(return_data+1).cumprod(axis=0)[-1]-1
