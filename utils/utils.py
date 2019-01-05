@@ -19,6 +19,23 @@ def relu(z):
     
     return s
 
+def sigmoid_backward(dA, z):
+    
+    dA = np.multiply(dA, sigmoid(z)*(1 - sigmoid(z)))
+
+    return dA
+
+def relu_backward(dA, z):
+    
+    for i in range(dA.shape[0]):
+        for j in range(dA.shape[1]):
+            if z[i][j] > 0:
+                dA[i][j] = dA[i][j] * 1 
+            else:
+                dA[i][j] = dA[i][j] * 0
+    
+    return dA
+
 def Calcuate_performance_indicators(return_data, period, type_s):
     #总收益
     Total_return=(return_data+1).cumprod(axis=0)[-1]-1
