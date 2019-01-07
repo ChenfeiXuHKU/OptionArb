@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Dec 28 19:57:41 2018
+Created on Sun Jan  6 13:49:55 2019
 
 @author: chenf
 """
@@ -14,8 +14,9 @@ import numpy as np
 import sys
 sys.path.append(r"C:\Users\chenf\Desktop\GITS\OptionArb\utils")
 import utils as ut
+import nn_modules as nnm
 
-def Predict(begin, end, dim, number, w, b, option_info, fund, Long_fund, Short_fund):
+def Predict(begin, end, dim, number, parameters, activation, option_info, fund, Long_fund, Short_fund):
 
     Period = []
     Return = []
@@ -26,7 +27,7 @@ def Predict(begin, end, dim, number, w, b, option_info, fund, Long_fund, Short_f
     short_fund_cum = []
     
     while begin != end:
-        portfolio = SearchPortfolio(begin, dim, number, w, b)       
+        portfolio = SearchPortfolio(begin, dim, number, parameters, activation)       
         #daily stats
         long_fund = 0
         short_fund = 0
@@ -128,7 +129,7 @@ def Predict(begin, end, dim, number, w, b, option_info, fund, Long_fund, Short_f
     return Period,fund_cum,Return,long_fund_cum,Long_Return,short_fund_cum,Short_Return              
                 
 
-def SearchPortfolio(begin, dim, number, w, b):
+def SearchPortfolio(begin, dim, number, parameters, activation):
     
     portfolio = {}
     Predict_data = OrderedDict() 
@@ -136,8 +137,11 @@ def SearchPortfolio(begin, dim, number, w, b):
     
     #predict probs
     for i in range(data.shape[1]):
-        prob = ut.sigmoid(np.sum(np.multiply(w,data.iloc[:,i].values)) + b)
-        Predict_data.update({data.columns[i]:prob})      
+        x = data.iloc[:,i].values
+#        print(x.reshape(x.shape[0],1))
+        AL, caches = nnm.L_model_forward(x.reshape(x.shape[0],1), parameters, activation)
+#        print(AL)
+        Predict_data.update({data.columns[i]:AL[0][0]})      
 
     #sort
     if Predict_data:
@@ -207,66 +211,78 @@ Fund = 100000
 Long_fund = 100000
 Short_fund = 100000
 
-option_number = 20 #choose how many options
 dim = 5 #feature dim
 
-num_iters = [1000, 2000, 3000]
+num_iters = [1000,2000,3000]
 num_lrs = [0.001, 0.01, 0.1]
+#activations = ['relu','sigmoid']
+activations = ['relu']
+Ls = [2,]
 
-all_Period = []
+option_number = 20 #choose how many options
+layers_dims = [dim*2, dim, 1]
+
 all_Return = []
 all_Long_Return = []
 all_Short_Return = []
+all_Period = []
 all_fund_cum = []
 all_long_fund_cum = []
 all_short_fund_cum = []
 
-for num_iter in num_iters:    
-    for num_lr in num_lrs:  
-        for i in range(len(begin_ends_5)):
-            
-            w = np.loadtxt('./weights/w_' + str(num_lr) + 'lr, ' + str(num_iter) + 'iters, ' + str(dim) + 'f_' + names[i] + '.txt')
-            b = np.loadtxt('./weights/b_' + str(num_lr) + 'lr, ' + str(num_iter) + 'iters, ' + str(dim) + 'f_' + names[i] + '.txt')
-        
-            temp_Period,temp_fund_cum,temp_Return,temp_long_fund_cum,temp_Long_Return,\
-                temp_short_fund_cum,temp_Short_Return = Predict(begin_ends_5[i][0], begin_ends_5[i][1], \
-                                                                dim, option_number, w, b, option_info, Fund, Long_fund, Short_fund)
-            
-            Fund = temp_fund_cum[-1]
-            Long_fund = temp_long_fund_cum[-1]
-            Short_fund = temp_short_fund_cum[-1]
-            
-            all_Return = all_Return + temp_Return
-            all_Long_Return = all_Long_Return + temp_Long_Return
-            all_Short_Return = all_Short_Return + temp_Short_Return
-            all_Period = all_Period + temp_Period
-            all_fund_cum = all_fund_cum + temp_fund_cum
-            all_long_fund_cum = all_long_fund_cum + temp_long_fund_cum
-            all_short_fund_cum = all_short_fund_cum + temp_short_fund_cum
-            
-        data = pd.DataFrame(index = all_Period, columns=['FundCum','Return','LongFundCum','LongReturn','ShortFundCum','ShortReturn'])
-        data['FundCum']=np.array(all_fund_cum)
-        data['Return']=np.array(all_Return)
-        data['LongFundCum']=np.array(all_long_fund_cum)
-        data['LongReturn']=np.array(all_Long_Return)
-        data['ShortFundCum']=np.array(all_short_fund_cum)
-        data['ShortReturn']=np.array(all_Short_Return)
-            
-        indicators = ut.Calcuate_performance_indicators(data['Return'], 252, 'Long-Short')   
-        indicators_long = ut.Calcuate_performance_indicators(data['LongReturn'], 252, 'Long')   
-        indicators_short = ut.Calcuate_performance_indicators(data['ShortReturn'], 252, 'Short')
-            
-        indis = (indicators.append(indicators_long)).append(indicators_short)
-            
-        print(indicators.T)
-            
-        name='./results/Results('+str(option_number)+'options, '+str(num_lr) + 'lr, ' + str(num_iter) + 'iters, ' + str(dim) + 'f)'
-        wbw = pd.ExcelWriter(name+'.xlsx')
-        data.to_excel(wbw, 'PnL')
-        indis.to_excel(wbw, 'Indicators')
-            
-        wbw.save()
-        wbw.close()            
-    
-                
-                
+
+for L in Ls: 
+    for num_iter in num_iters:    
+        for num_lr in num_lrs:   
+            for activation in activations:    
+                for i in range(len(begin_ends_5)):
+                    parameters = {}
+                    for l in range(1, L+1):
+                        
+                        temp_w = np.loadtxt('./weights/w_' + str(L) + 'l_' + str(l) + '_' + str(num_lr) + \
+                                  'lr_' + activation + '_' + str(num_iter) + 'iters_' + str(dim) + 'f_' + names[i] + '.txt')
+                        parameters['W' + str(l)] = temp_w.reshape(layers_dims[l],layers_dims[l-1])
+                        temp_b = np.loadtxt('./weights/b_' + str(L) + 'l_' + str(l) + '_' + str(num_lr) + \
+                                  'lr_' + activation + '_' + str(num_iter) + 'iters_' + str(dim) + 'f_' + names[i] + '.txt')
+                        parameters['b' + str(l)] = temp_b.reshape(layers_dims[l],1)
+
+                    temp_Period,temp_fund_cum,temp_Return,temp_long_fund_cum,temp_Long_Return,\
+                            temp_short_fund_cum,temp_Short_Return = Predict(begin_ends_5[i][0], begin_ends_5[i][1], \
+                                                                            dim, option_number, parameters, activation, option_info, Fund, Long_fund, Short_fund)
+                        
+                    Fund = temp_fund_cum[-1]
+                    Long_fund = temp_long_fund_cum[-1]
+                    Short_fund = temp_short_fund_cum[-1]
+                        
+                    all_Return = all_Return + temp_Return
+                    all_Long_Return = all_Long_Return + temp_Long_Return
+                    all_Short_Return = all_Short_Return + temp_Short_Return
+                    all_Period = all_Period + temp_Period
+                    all_fund_cum = all_fund_cum + temp_fund_cum
+                    all_long_fund_cum = all_long_fund_cum + temp_long_fund_cum
+                    all_short_fund_cum = all_short_fund_cum + temp_short_fund_cum
+                        
+                data = pd.DataFrame(index = all_Period, columns=['FundCum','Return','LongFundCum','LongReturn','ShortFundCum','ShortReturn'])
+                data['FundCum']=np.array(all_fund_cum)
+                data['Return']=np.array(all_Return)
+                data['LongFundCum']=np.array(all_long_fund_cum)
+                data['LongReturn']=np.array(all_Long_Return)
+                data['ShortFundCum']=np.array(all_short_fund_cum)
+                data['ShortReturn']=np.array(all_Short_Return)
+                        
+                indicators = ut.Calcuate_performance_indicators(data['Return'], 252, 'Long-Short')   
+                indicators_long = ut.Calcuate_performance_indicators(data['LongReturn'], 252, 'Long')   
+                indicators_short = ut.Calcuate_performance_indicators(data['ShortReturn'], 252, 'Short')
+                        
+                indis = (indicators.append(indicators_long)).append(indicators_short)
+                        
+                print(indicators.T)
+                        
+                name='./results/Results(' + str(L) + 'layers, '+str(option_number)+'options, '+str(num_lr) + \
+                                  'lr, ' + activation + ', ' + str(num_iter) + 'iters, ' + str(dim)+'f)'
+                wbw = pd.ExcelWriter(name+'.xlsx')
+                data.to_excel(wbw, 'PnL')
+                indis.to_excel(wbw, 'Indicators')
+                        
+                wbw.save()
+                wbw.close()            

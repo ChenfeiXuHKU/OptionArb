@@ -42,7 +42,7 @@ def Calcuate_performance_indicators(return_data, period, type_s):
     #平均日收益
     Average_return = return_data.mean()
     #年化收益
-    Annualized_Return = ((return_data+1).cumprod(axis=0)[-1]**(365/len(return_data)))-1
+    Annualized_Return = (return_data+1).cumprod(axis=0)[-1]**(365/len(return_data))-1
     #年化波动率：如果用月收益,年化应该乘以12的平方根
     Annualized_Volatility = return_data.std(axis=0)*period**0.5
     #年化夏普比

@@ -17,7 +17,7 @@ sys.path.append(r"C:\Users\chenf\Desktop\GITS\OptionArb\utils")
 import utils as ut
 from sklearn.ensemble import RandomForestClassifier
 
-def Predict(begin, end, name, dim, number, option_info, fund, Long_fund, Short_fund):
+def Predict(begin, end, name, dim, number, num_estimator, option_info, fund, Long_fund, Short_fund):
 
     Period = []
     Return = []
@@ -28,7 +28,7 @@ def Predict(begin, end, name, dim, number, option_info, fund, Long_fund, Short_f
     short_fund_cum = []
     
     while begin != end:
-        portfolio = SearchPortfolio(begin, name, dim, number)       
+        portfolio = SearchPortfolio(begin, name, dim, number, num_estimator)       
         #daily stats
         long_fund = 0
         short_fund = 0
@@ -130,7 +130,7 @@ def Predict(begin, end, name, dim, number, option_info, fund, Long_fund, Short_f
     return Period,fund_cum,Return,long_fund_cum,Long_Return,short_fund_cum,Short_Return              
                 
 
-def SearchPortfolio(begin, name, dim, number):
+def SearchPortfolio(begin, name, dim, number, num_estimator):
     
     portfolio = {}
     Predict_data = OrderedDict() 
@@ -141,7 +141,7 @@ def SearchPortfolio(begin, name, dim, number):
     X = train_data[1:11,:].T
     y = train_data[0:1,:]   
     y=np.array(y.tolist()[0])
-    rf = RandomForestClassifier(n_estimators=10, max_features='auto', max_depth=None, min_samples_split=2, bootstrap=True)
+    rf = RandomForestClassifier(n_estimators=num_estimator, max_features='auto', max_depth=None, min_samples_split=2, bootstrap=True)
     rf.fit(X, y)
     
     data = pd.read_csv('../predict_data/predict_data_' + str(dim) + 'd_' + begin + '.csv')
@@ -218,55 +218,57 @@ option_info=pd.read_excel('../option_info.xlsx')
 Fund = 100000
 Long_fund = 100000
 Short_fund = 100000
-number = 1 #choose how many options
+option_number = 1 #choose how many options
 dim = 5 #feature dim
+num_estimators = [10]
 
+all_Period = []
 all_Return = []
 all_Long_Return = []
 all_Short_Return = []
-all_Period = []
 all_fund_cum = []
 all_long_fund_cum = []
 all_short_fund_cum = []
 
-for i in range(len(begin_ends_5)):
-
-    temp_Period,temp_fund_cum,temp_Return,temp_long_fund_cum,temp_Long_Return,\
-        temp_short_fund_cum,temp_Short_Return = Predict(begin_ends_5[i][0], begin_ends_5[i][1], \
-                                                        names[i], dim, number, option_info, Fund, Long_fund, Short_fund)
+for num_estimator in num_estimators:
+    for i in range(len(begin_ends_5)):
     
-    Fund = temp_fund_cum[-1]
-    Long_fund = temp_long_fund_cum[-1]
-    Short_fund = temp_short_fund_cum[-1]
-    
-    all_Return = all_Return + temp_Return
-    all_Long_Return = all_Long_Return + temp_Long_Return
-    all_Short_Return = all_Short_Return + temp_Short_Return
-    all_Period = all_Period + temp_Period
-    all_fund_cum = all_fund_cum + temp_fund_cum
-    all_long_fund_cum = all_long_fund_cum + temp_long_fund_cum
-    all_short_fund_cum = all_short_fund_cum + temp_short_fund_cum
-    
-data = pd.DataFrame(index = all_Period, columns=['FundCum','Return','LongFundCum','LongReturn','ShortFundCum','ShortReturn'])
-data['FundCum']=np.array(all_fund_cum)
-data['Return']=np.array(all_Return)
-data['LongFundCum']=np.array(all_long_fund_cum)
-data['LongReturn']=np.array(all_Long_Return)
-data['ShortFundCum']=np.array(all_short_fund_cum)
-data['ShortReturn']=np.array(all_Short_Return)
-    
-indicators = ut.Calcuate_performance_indicators(data['Return'], 252, 'Long-Short')   
-indicators_long = ut.Calcuate_performance_indicators(data['LongReturn'], 252, 'Long')   
-indicators_short = ut.Calcuate_performance_indicators(data['ShortReturn'], 252, 'Short')
-    
-indis = (indicators.append(indicators_long)).append(indicators_short)
-    
-print(indicators.T)
-    
-name='Results(10estimators, '+str(number)+'options, '+str(dim)+', RF)'
-wbw = pd.ExcelWriter(name+'.xlsx')
-data.to_excel(wbw, 'PnL')
-indis.to_excel(wbw, 'Indicators')
-    
-wbw.save()
-wbw.close()
+        temp_Period,temp_fund_cum,temp_Return,temp_long_fund_cum,temp_Long_Return,\
+            temp_short_fund_cum,temp_Short_Return = Predict(begin_ends_5[i][0], begin_ends_5[i][1], \
+                                                            names[i], dim, option_number, num_estimator, option_info, Fund, Long_fund, Short_fund)
+        
+        Fund = temp_fund_cum[-1]
+        Long_fund = temp_long_fund_cum[-1]
+        Short_fund = temp_short_fund_cum[-1]
+        
+        all_Return = all_Return + temp_Return
+        all_Long_Return = all_Long_Return + temp_Long_Return
+        all_Short_Return = all_Short_Return + temp_Short_Return
+        all_Period = all_Period + temp_Period
+        all_fund_cum = all_fund_cum + temp_fund_cum
+        all_long_fund_cum = all_long_fund_cum + temp_long_fund_cum
+        all_short_fund_cum = all_short_fund_cum + temp_short_fund_cum
+        
+    data = pd.DataFrame(index = all_Period, columns=['FundCum','Return','LongFundCum','LongReturn','ShortFundCum','ShortReturn'])
+    data['FundCum']=np.array(all_fund_cum)
+    data['Return']=np.array(all_Return)
+    data['LongFundCum']=np.array(all_long_fund_cum)
+    data['LongReturn']=np.array(all_Long_Return)
+    data['ShortFundCum']=np.array(all_short_fund_cum)
+    data['ShortReturn']=np.array(all_Short_Return)
+        
+    indicators = ut.Calcuate_performance_indicators(data['Return'], 252, 'Long-Short')   
+    indicators_long = ut.Calcuate_performance_indicators(data['LongReturn'], 252, 'Long')   
+    indicators_short = ut.Calcuate_performance_indicators(data['ShortReturn'], 252, 'Short')
+        
+    indis = (indicators.append(indicators_long)).append(indicators_short)
+        
+    print(indicators.T)
+        
+    name='./results/Results('+ str(num_estimator) + 'estimators, '+str(option_number)+'options, '+str(dim)+'f)'
+    wbw = pd.ExcelWriter(name+'.xlsx')
+    data.to_excel(wbw, 'PnL')
+    indis.to_excel(wbw, 'Indicators')
+        
+    wbw.save()
+    wbw.close()

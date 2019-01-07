@@ -16,12 +16,10 @@ def initialize_with_zeros(dim):
     b = 0
     return w, b
 
-
 def initialize_with_gaussian(dim):
     w =  np.random.randn(dim,1) * 0.01
     b = 0
     return w, b
-
 
 def propagate(w, b, X, Y):
 
@@ -64,7 +62,6 @@ def predict(w, b, X):
     m = X.shape[1]
     Y_prediction = np.zeros((1,m))
     w = w.reshape(X.shape[0], 1)
-    
     A = ut.sigmoid(np.dot(w.T,X)+b)
 
     for i in range(A.shape[1]):
@@ -94,18 +91,17 @@ path = '../train_data/'
 names = ['2017-12','2018-01','2018-02','2018-03',\
          '2018-04','2018-05','2018-06','2018-07',\
          '2018-08','2018-09','2018-10','2018-11',]
-number = 5
-iterations = 1000
-learning_rate = 0.1
+
+dim = 5
+iterations = 3000
+learning_rate = 0.001
 
 for name in names:
-    train_set = pd.read_csv(path + 'train_data_' + str(number) + 'd_' + name + '.csv')
+    train_set = pd.read_csv(path + 'train_data_' + str(dim) + 'd_' + name + '.csv')
     train_set = train_set.values
-    dim = train_set.shape[0] - 1
-    w, b = initialize_with_zeros(dim)
+    w, b = initialize_with_zeros(dim*2)
     
-#    batch_size = 50
-    batch_size = train_set.shape[1]
+    batch_size = 100
     for i in range(iterations):
         random_index = np.random.permutation(train_set.shape[1]).tolist()       
         batch_count = 0
@@ -137,8 +133,8 @@ for name in names:
     w = d['w']
     b = np.reshape(np.array([d['b']]), (1,1))
         
-    np.savetxt('w_batch_' + str(number) + '_' + name + '.txt', w, fmt='%0.8f')
-    np.savetxt('b_batch_'+ str(number) + '_' + name + '.txt', b, fmt='%0.8f')
+    np.savetxt('./weights/w_' + str(learning_rate) + 'lr, ' + str(iterations) + 'iters, ' + str(dim) + 'f_' + name + '.txt', w, fmt='%0.8f')
+    np.savetxt('./weights/b_' + str(learning_rate) + 'lr, ' + str(iterations) + 'iters, ' + str(dim) + 'f_' + name + '.txt', b, fmt='%0.8f')
     
 
 

@@ -11,7 +11,7 @@ import sys
 sys.path.append(r"C:\Users\chenf\Desktop\GITS\OptionArb\utils")
 import nn_modules as nnm
 
-def L_layer_model(X, Y, layers_dims, activation, parameters, learning_rate = 0.0075):#lr was 0.009
+def L_layer_model(X, Y, layers_dims, activation, parameters, learning_rate):
 
     AL, caches = nnm.L_model_forward(X, parameters, activation)
 
@@ -31,7 +31,7 @@ layers_dims = [dim*2, dim, 1] #  2-layer model
 #layers_dims = [dim*2, dim, 2, 1] #  3-layer model
 
 iterations = 1000
-learning_rate = 0.01
+learning_rate = 0.001
 activation = 'relu'
 
 for name in names:
@@ -40,7 +40,6 @@ for name in names:
     parameters = nnm.initialize_parameters_deep(layers_dims)
 
     batch_size = 100
-#    batch_size = train_set.shape[1]
     for i in range(iterations):
         random_index = np.random.permutation(train_set.shape[1]).tolist()       
         batch_count = 0
@@ -65,15 +64,14 @@ for name in names:
     Y_prediction_train = nnm.predict(train_x, parameters, activation)
     print("train accuracy:{}%".format(100 - np.mean(np.abs(Y_prediction_train - train_y)) * 100))   
     
+    #save
     L = len(parameters) // 2
-
     for l in range(L):
         w = parameters["W" + str(l+1)]
         b = parameters["b" + str(l+1)]        
-            
-        np.savetxt('w_' + str(L) + 'l_' + str(l+1) + '_' + str(learning_rate) + \
+        np.savetxt('./weights/w_' + str(L) + 'l_' + str(l+1) + '_' + str(learning_rate) + \
                    'lr_' + activation + '_' + str(iterations) + 'iters_' + str(dim) + 'f_' + name + '.txt', w, fmt='%0.8f')
-        np.savetxt('b_' + str(L) + 'l_' + str(l+1) + '_' + str(learning_rate) + \
+        np.savetxt('./weights/b_' + str(L) + 'l_' + str(l+1) + '_' + str(learning_rate) + \
                    'lr_' + activation + '_' + str(iterations) + 'iters_' + str(dim) + 'f_' + name + '.txt', b, fmt='%0.8f')
 
 
