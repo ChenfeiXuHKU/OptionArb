@@ -203,26 +203,27 @@ names = ['2017-12','2018-01','2018-02','2018-03',\
          '2018-08','2018-09','2018-10','2018-11',]
 
 option_info=pd.read_excel('../option_info.xlsx') 
-Fund = 100000
-Long_fund = 100000
-Short_fund = 100000
 
-option_number = 20 #choose how many options
+
+option_number = 5 #choose how many options
 dim = 5 #feature dim
 
 num_iters = [1000, 2000, 3000]
 num_lrs = [0.001, 0.01, 0.1]
 
-all_Period = []
-all_Return = []
-all_Long_Return = []
-all_Short_Return = []
-all_fund_cum = []
-all_long_fund_cum = []
-all_short_fund_cum = []
-
 for num_iter in num_iters:    
-    for num_lr in num_lrs:  
+    for num_lr in num_lrs:
+        Fund = 100000
+        Long_fund = 100000
+        Short_fund = 100000
+        
+        all_Period = []
+        all_Return = []
+        all_Long_Return = []
+        all_Short_Return = []
+        all_fund_cum = []
+        all_long_fund_cum = []
+        all_short_fund_cum = []
         for i in range(len(begin_ends_5)):
             
             w = np.loadtxt('./weights/w_' + str(num_lr) + 'lr, ' + str(num_iter) + 'iters, ' + str(dim) + 'f_' + names[i] + '.txt')
