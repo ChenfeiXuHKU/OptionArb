@@ -205,7 +205,7 @@ names = ['2017-12','2018-01','2018-02','2018-03',\
 option_info=pd.read_excel('../option_info.xlsx') 
 
 
-option_number = 5 #choose how many options
+option_number = 1 #choose how many options
 dim = 5 #feature dim
 
 num_iters = [1000, 2000, 3000]

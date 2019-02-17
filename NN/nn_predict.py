@@ -73,8 +73,8 @@ def Predict(begin, end, dim, number, parameters, activation, option_info, fund, 
                     long_fee = 0.5       
 
                 long_fund = long_fund + last_long_settle*option_info.loc[long_info,'Contract Size'] + long_fee
-                long_pnl = long_pnl + (long_settle - last_long_settle)*option_info.loc[long_info,'Contract Size'] - 2*long_fee               
-                
+                long_pnl = long_pnl + (long_settle - long_open)*option_info.loc[long_info,'Contract Size'] - 2*long_fee               
+                print('Long settle:' + str(long_settle) + ', Long pnl:'+ str(long_pnl))
             #short side
             if short_open > 0 and short_settle > 0:
                 if option_info.loc[short_info,'Tier']==1:
@@ -85,8 +85,8 @@ def Predict(begin, end, dim, number, parameters, activation, option_info, fund, 
                     short_fee = 0.5        
                     
                 short_fund = short_fund + last_short_settle*option_info.loc[short_info,'Contract Size'] + short_fee
-                short_pnl = short_pnl - (short_settle - last_short_settle)*option_info.loc[short_info,'Contract Size'] - 2*short_fee
-    
+                short_pnl = short_pnl - (short_settle - short_open)*option_info.loc[short_info,'Contract Size'] - 2*short_fee
+                print('Short settle:' + str(short_settle) + ', Short pnl:'+ str(short_pnl))
         print('--------------------------')
         if long_fund > 0 and short_fund > 0:
             pnl = long_pnl + short_pnl
@@ -205,6 +205,7 @@ begin_ends_10 = [
 names = ['2017-12','2018-01','2018-02','2018-03',\
          '2018-04','2018-05','2018-06','2018-07',\
          '2018-08','2018-09','2018-10','2018-11',]
+#names = ['2018-11']
 
 option_info=pd.read_excel('../option_info.xlsx') 
 
@@ -281,8 +282,9 @@ for L in Ls:
                 name='./results/Results(' + str(L) + 'layers, '+str(option_number)+'options, '+str(num_lr) + \
                                   'lr, ' + activation + ', ' + str(num_iter) + 'iters, ' + str(dim)+'f)'
                 wbw = pd.ExcelWriter(name+'.xlsx')
-                data.to_excel(wbw, 'PnL')
+                
                 indis.to_excel(wbw, 'Indicators')
+                data.to_excel(wbw, 'PnL')
                         
                 wbw.save()
                 wbw.close()            
