@@ -14,7 +14,7 @@ import numpy as np
 import sys
 sys.path.append(r"C:\Users\chenf\Desktop\GITS\OptionArb\utils")
 import utils as ut
-import nn_modules as nnm
+import dnn_modules as dnnm
 
 def Predict(begin, end, dim, number, parameters, activation, option_info, fund, Long_fund, Short_fund):
 
@@ -139,7 +139,7 @@ def SearchPortfolio(begin, dim, number, parameters, activation):
     for i in range(data.shape[1]):
         x = data.iloc[:,i].values
 #        print(x.reshape(x.shape[0],1))
-        AL, caches = nnm.L_model_forward(x.reshape(x.shape[0],1), parameters, activation)
+        AL, caches = dnnm.L_model_forward(x.reshape(x.shape[0],1), parameters, activation)
 #        print(AL)
         Predict_data.update({data.columns[i]:AL[0][0]})      
 
@@ -214,11 +214,11 @@ dim = 5 #feature dim
 num_iters = [1000,2000,3000]
 num_lrs = [0.001, 0.01, 0.1]
 #activations = ['relu','sigmoid']
-activations = ['sigmoid']
-Ls = [2,]
+activations = ['sigmoid','relu']
+Ls = [3]
 
 option_number = 1 #choose how many options
-layers_dims = [dim*2, dim, 1]
+layers_dims = [dim*2, dim, 2, 1]
 
 for L in Ls: 
     for num_iter in num_iters:    

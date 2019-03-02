@@ -9,15 +9,15 @@ import pandas as pd
 import math
 import sys
 sys.path.append(r"C:\Users\chenf\Desktop\GITS\OptionArb\utils")
-import nn_modules as nnm
+import dnn_modules as dnnm
 
 def L_layer_model(X, Y, layers_dims, activation, parameters, learning_rate):
 
-    AL, caches = nnm.L_model_forward(X, parameters, activation)
+    AL, caches = dnnm.L_model_forward(X, parameters, activation)
 
-    grads = nnm.L_model_backward(AL, Y, caches, activation)
+    grads = dnnm.L_model_backward(AL, Y, caches, activation)
     
-    parameters = nnm.update_parameters(parameters, grads, learning_rate)
+    parameters = dnnm.update_parameters(parameters, grads, learning_rate)
 
     return parameters
 
@@ -27,17 +27,17 @@ names = ['2017-12','2018-01','2018-02','2018-03',\
          '2018-04','2018-05','2018-06','2018-07',\
          '2018-08','2018-09','2018-10','2018-11',]
 dim = 5
-layers_dims = [dim*2, dim, 1] #  2-layer model
-#layers_dims = [dim*2, dim, 2, 1] #  3-layer model
+#layers_dims = [dim*2, dim, 1] #  2-layer model
+layers_dims = [dim*2, dim, 2, 1] #  3-layer model
 
-iterations = 1000
-learning_rate = 0.001
+iterations = 3000
+learning_rate = 0.1
 activation = 'sigmoid'
 
 for name in names:
     train_set = pd.read_csv(path + 'train_data_' + str(dim) + 'd_' + name + '.csv')
     train_set = train_set.values
-    parameters = nnm.initialize_parameters_deep(layers_dims)
+    parameters = dnnm.initialize_parameters_deep(layers_dims)
 
     batch_size = 100
     for i in range(iterations):
@@ -61,7 +61,7 @@ for name in names:
            
     train_x = train_set[1:11,:]
     train_y = train_set[0:1,:]       
-    Y_prediction_train = nnm.predict(train_x, parameters, activation)
+    Y_prediction_train = dnnm.predict(train_x, parameters, activation)
     print("train accuracy:{}%".format(100 - np.mean(np.abs(Y_prediction_train - train_y)) * 100))   
     
     #save
