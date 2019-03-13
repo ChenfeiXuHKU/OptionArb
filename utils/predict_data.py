@@ -63,7 +63,7 @@ def PredictData(begin, end, dim):
                     c_scale = abs(temp_changes_c_max)
                     inputs.append(temp_C_change / c_scale)
                 else:
-                    if temp_C_change >= 0:
+                    if abs(temp_changes_c_max) >= abs(temp_changes_c_min):
                         c_scale = abs(temp_changes_c_max)
                     else:
                         c_scale = abs(temp_changes_c_min)
@@ -139,7 +139,7 @@ def PredictData(begin, end, dim):
                     p_scale = abs(temp_changes_p_max)
                     inputs.append(temp_P_change / p_scale) 
                 else:
-                    if temp_P_change >= 0:
+                    if abs(temp_changes_p_max) >= abs(temp_changes_p_min):
                         p_scale = abs(temp_changes_p_max)
                     else:
                         p_scale = abs(temp_changes_p_min)
@@ -216,10 +216,10 @@ begin_ends_10 = [
             ['2018-12-14','2018-12-31'],
             ] 
 
-dim = 10 #feature dim
+dim = 5 #feature dim
 
-for i in range(len(begin_ends_10)):
-    PredictData(begin_ends_10[i][0], begin_ends_10[i][1], dim)
+for i in range(len(begin_ends_5)):
+    PredictData(begin_ends_5[i][0], begin_ends_5[i][1], dim)
     
    
     

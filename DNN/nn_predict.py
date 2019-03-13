@@ -14,32 +14,45 @@ import numpy as np
 import sys
 sys.path.append(r"C:\Users\chenf\Desktop\GITS\OptionArb\utils")
 import utils as ut
-import dnn_modules as dnnm
+import nn_modules as nnm
 
-def Predict(begin, end, dim, number, parameters, activation, option_info, fund, Long_fund, Short_fund):
+def Predict(begin, end, dim, number, parameters, activation, option_info):
 
     Period = []
+    
     Return = []
     Long_Return = []
     Short_Return = []
-    fund_cum = []
-    long_fund_cum = []
-    short_fund_cum = []
+
+    Money_Cum = []
+    Long_Money_Cum = []
+    Short_Money_Cum = []
     
+    money_cum = 0
+    long_money_cum = 0
+    short_money_cum = 0
+        
     while begin != end:
-        portfolio = SearchPortfolio(begin, dim, number, parameters, activation)       
-        #daily stats
+        
+        portfolio = SearchPortfolio(begin, dim, number, parameters, activation)
+        
+#        daily stats
+#        fund = 0
         long_fund = 0
         short_fund = 0
+        
+        pnl = 0
         long_pnl = 0 
         short_pnl = 0
-        pnl = 0
+
         long_fee = 0
         short_fee = 0
+        
         #begin backtesting
         arb_data = pd.read_csv('../option_data/arb_data_' + begin + '.csv')
         print(begin)
         print(portfolio)
+        
         #for each short-long pair
         for i in range(number):
             long_i = arb_data[(arb_data['Option Code'] == portfolio['1'][0][i])].index.tolist()[0]   			 
@@ -57,9 +70,7 @@ def Predict(begin, end, dim, number, parameters, activation, option_info, fund, 
             elif portfolio['1'][1][i] == 'P' and portfolio['-1'][1][i] == 'P':
                 long_settle, long_open = arb_data.loc[long_i,'Settle(P)'],arb_data.loc[long_i,'Open(P)']
                 short_settle, short_open = arb_data.loc[short_i,'Settle(P)'],arb_data.loc[short_i,'Open(P)']
-            
-            last_long_settle = portfolio['1'][2][i]
-            last_short_settle = portfolio['-1'][2][i]            
+                     
             long_info = option_info[(option_info['Option Code'] == portfolio['1'][0][i])].index.tolist()[0]   			 
             short_info = option_info[(option_info['Option Code'] == portfolio['-1'][0][i])].index.tolist()[0]          
             
@@ -72,9 +83,9 @@ def Predict(begin, end, dim, number, parameters, activation, option_info, fund, 
                 elif option_info.loc[long_info,'Tier']==3:
                     long_fee = 0.5       
 
-                long_fund = long_fund + last_long_settle*option_info.loc[long_info,'Contract Size'] + long_fee
-                long_pnl = long_pnl + (long_settle - long_open)*option_info.loc[long_info,'Contract Size'] - 2*long_fee               
-                print('Long settle:' + str(long_settle) + ', Long pnl:'+ str(long_pnl))
+                long_fund = long_fund + long_open*option_info.loc[long_info,'Contract Size'] + long_fee
+                long_pnl = long_pnl + (long_settle - long_open)*option_info.loc[long_info,'Contract Size'] - 2*long_fee
+                
             #short side
             if short_open > 0 and short_settle > 0:
                 if option_info.loc[short_info,'Tier']==1:
@@ -84,36 +95,34 @@ def Predict(begin, end, dim, number, parameters, activation, option_info, fund, 
                 elif option_info.loc[short_info,'Tier']==3:
                     short_fee = 0.5        
                     
-                short_fund = short_fund + last_short_settle*option_info.loc[short_info,'Contract Size'] + short_fee
+                short_fund = short_fund + short_open*option_info.loc[short_info,'Contract Size'] + short_fee
                 short_pnl = short_pnl - (short_settle - short_open)*option_info.loc[short_info,'Contract Size'] - 2*short_fee
-                print('Short settle:' + str(short_settle) + ', Short pnl:'+ str(short_pnl))
-        print('--------------------------')
-        if long_fund > 0 and short_fund > 0:
-            pnl = long_pnl + short_pnl
-        elif long_fund == 0 and short_fund > 0:
-            pnl = short_pnl
-        elif short_fund == 0 and long_fund > 0:
-            pnl = long_pnl
-
-        Return.append(pnl/fund)
-        fund = fund + pnl
-        fund_cum.append(round(fund,2))
-    
-        if long_fund > 0:
-            Long_Return.append(long_pnl/Long_fund)
-            Long_fund = Long_fund + long_pnl
-            long_fund_cum.append(round(Long_fund,2))
+        
+        #long-short performance
+        fund = long_fund + short_fund
+        pnl = long_pnl + short_pnl
+        if fund != 0:
+            Return.append(pnl/fund)
         else:
-            Long_Return.append(0)
-            long_fund_cum.append(round(Long_fund,2))
+            Return.append(0)
+        money_cum = money_cum + pnl
+        Money_Cum.append(round(money_cum,2))
+        
+        #long side performance
+        if long_fund > 0:
+            Long_Return.append(long_pnl/long_fund)
+        else:
+            Long_Return.append(0)     
+        long_money_cum = long_money_cum + long_pnl
+        Long_Money_Cum.append(round(long_money_cum,2))
                 
+        #short side performance
         if short_fund > 0:
-            Short_Return.append(short_pnl/Short_fund)
-            Short_fund = Short_fund + short_pnl
-            short_fund_cum.append(round(Short_fund,2))
+            Short_Return.append(short_pnl/short_fund)
         else:
             Short_Return.append(0)
-            short_fund_cum.append(round(Short_fund,2))
+        short_money_cum = short_money_cum + long_pnl
+        Short_Money_Cum.append(round(short_money_cum,2))
     
         Period.append(begin)
         
@@ -126,9 +135,9 @@ def Predict(begin, end, dim, number, parameters, activation, option_info, fund, 
             next_date = str(begin_date + timedelta(days = count))
         begin = next_date[0:10]
         
-    return Period,fund_cum,Return,long_fund_cum,Long_Return,short_fund_cum,Short_Return              
+    return Period,Money_Cum,Return,Long_Money_Cum,Long_Return,Short_Money_Cum,Short_Return              
                 
-
+#%%
 def SearchPortfolio(begin, dim, number, parameters, activation):
     
     portfolio = {}
@@ -138,9 +147,7 @@ def SearchPortfolio(begin, dim, number, parameters, activation):
     #predict probs
     for i in range(data.shape[1]):
         x = data.iloc[:,i].values
-#        print(x.reshape(x.shape[0],1))
-        AL, caches = dnnm.L_model_forward(x.reshape(x.shape[0],1), parameters, activation)
-#        print(AL)
+        AL, caches = nnm.L_model_forward(x.reshape(x.shape[0],1), parameters, activation)
         Predict_data.update({data.columns[i]:AL[0][0]})      
 
     #sort
@@ -205,30 +212,24 @@ begin_ends_10 = [
 names = ['2017-12','2018-01','2018-02','2018-03',\
          '2018-04','2018-05','2018-06','2018-07',\
          '2018-08','2018-09','2018-10','2018-11',]
-#names = ['2018-11']
 
 option_info=pd.read_excel('../option_info.xlsx') 
 
 dim = 5 #feature dim
 
 num_iters = [1000,2000,3000]
-num_lrs = [0.001, 0.01, 0.1]
-#activations = ['relu','sigmoid']
-activations = ['sigmoid','relu']
-Ls = [3]
+num_lrs = [0.001,0.01,0.1]
+activations = ['relu']
+Ls = [3,]
 
 option_number = 1 #choose how many options
-layers_dims = [dim*2, dim, 2, 1]
+layers_dims = [dim*2, dim, 3, 1]
 
 for L in Ls: 
     for num_iter in num_iters:    
         for num_lr in num_lrs:   
             for activation in activations:
-                
-                Fund = 100000
-                Long_fund = 100000
-                Short_fund = 100000
-                
+                        
                 all_Return = []
                 all_Long_Return = []
                 all_Short_Return = []
@@ -236,25 +237,21 @@ for L in Ls:
                 all_fund_cum = []
                 all_long_fund_cum = []
                 all_short_fund_cum = []
+                
                 for i in range(len(begin_ends_5)):
                     parameters = {}
                     for l in range(1, L+1):
                         
                         temp_w = np.loadtxt('./weights/w_' + str(L) + 'l_' + str(l) + '_' + str(num_lr) + \
-                                  'lr_' + activation + '_' + str(num_iter) + 'iters_' + str(dim) + 'f_' + names[i] + '.txt')
+                                  '_' + activation + '_' + str(num_iter) + '_' + names[i] + '.txt')
                         parameters['W' + str(l)] = temp_w.reshape(layers_dims[l],layers_dims[l-1])
                         temp_b = np.loadtxt('./weights/b_' + str(L) + 'l_' + str(l) + '_' + str(num_lr) + \
-                                  'lr_' + activation + '_' + str(num_iter) + 'iters_' + str(dim) + 'f_' + names[i] + '.txt')
+                                  '_' + activation + '_' + str(num_iter) + '_' + names[i] + '.txt')
                         parameters['b' + str(l)] = temp_b.reshape(layers_dims[l],1)
 
                     temp_Period,temp_fund_cum,temp_Return,temp_long_fund_cum,temp_Long_Return,\
                             temp_short_fund_cum,temp_Short_Return = Predict(begin_ends_5[i][0], begin_ends_5[i][1], \
-                                                                            dim, option_number, parameters, activation, option_info, Fund, Long_fund, Short_fund)
-                        
-                    Fund = temp_fund_cum[-1]
-                    Long_fund = temp_long_fund_cum[-1]
-                    Short_fund = temp_short_fund_cum[-1]
-                        
+                                                                            dim, option_number, parameters, activation, option_info)
                     all_Return = all_Return + temp_Return
                     all_Long_Return = all_Long_Return + temp_Long_Return
                     all_Short_Return = all_Short_Return + temp_Short_Return
@@ -271,16 +268,16 @@ for L in Ls:
                 data['ShortFundCum']=np.array(all_short_fund_cum)
                 data['ShortReturn']=np.array(all_Short_Return)
                         
-                indicators = ut.Calcuate_performance_indicators(data['Return'], 252, 'Long-Short')   
-                indicators_long = ut.Calcuate_performance_indicators(data['LongReturn'], 252, 'Long')   
-                indicators_short = ut.Calcuate_performance_indicators(data['ShortReturn'], 252, 'Short')
+                indicators = ut.Calcuate_performance_indicators(data['Return'], 244, 'Long-Short')   
+                indicators_long = ut.Calcuate_performance_indicators(data['LongReturn'], 244, 'Long')   
+                indicators_short = ut.Calcuate_performance_indicators(data['ShortReturn'], 244, 'Short')
                         
                 indis = (indicators.append(indicators_long)).append(indicators_short)
                         
                 print(indicators.T)
                         
-                name='./results/Results(' + str(L) + 'layers, '+str(option_number)+'options, '+str(num_lr) + \
-                                  'lr, ' + activation + ', ' + str(num_iter) + 'iters, ' + str(dim)+'f)'
+                name='./results/Results(' + str(L) + 'layers-'+str(option_number)+'options-'+str(num_lr) + \
+                                  '-' + activation + '-' + str(num_iter)
                 wbw = pd.ExcelWriter(name+'.xlsx')
                 
                 indis.to_excel(wbw, 'Indicators')

@@ -16,7 +16,7 @@ def get_data(begin, end, dim):
         C_data_pd = pd.DataFrame()
         P_data_pd = pd.DataFrame()      
         one_data = pd.DataFrame()      
-        data = pd.read_csv('option_data/option_' + begin + '.csv')
+        data = pd.read_csv('../option_data/option_' + begin + '.csv')
         
         #for call options one day
         for i in range(len(data)):
@@ -42,11 +42,11 @@ def get_data(begin, end, dim):
                 current_date = datetime.strptime(temp_date,'%Y-%m-%d')
                 count = 1
                 last_date = str(current_date - timedelta(days = count))
-                while((not os.path.exists('option_data/option_'+ last_date[0:10] + '.csv')) and last_date[0:10] >= '2017-07-03'):
+                while((not os.path.exists('../option_data/option_'+ last_date[0:10] + '.csv')) and last_date[0:10] >= '2017-07-03'):
                     count = count + 1
                     last_date = str(current_date - timedelta(days = count))
                 u_time = last_date[0:10]
-                last_data = pd.read_csv('option_data/option_' + u_time + '.csv')
+                last_data = pd.read_csv('../option_data/option_' + u_time + '.csv')
                 
                 #get max change value at that day
                 changes_c = last_data['Change(C%)'].tolist()
@@ -71,10 +71,11 @@ def get_data(begin, end, dim):
                     c_scale = abs(temp_changes_c_max)
                     C_data[code].append(temp_C_change / c_scale)
                 else:
-                    if temp_C_change >= 0:
+                    if abs(temp_changes_c_max) >= abs(temp_changes_c_min):
                         c_scale = abs(temp_changes_c_max)
                     else:
                         c_scale = abs(temp_changes_c_min)
+            
                     C_data[code].append(temp_C_change / c_scale)
 
                 #get max volume at that day
@@ -125,11 +126,11 @@ def get_data(begin, end, dim):
                 current_date = datetime.strptime(temp_date,'%Y-%m-%d')
                 count = 1
                 last_date = str(current_date - timedelta(days = count))
-                while((not os.path.exists('option_data/option_'+ last_date[0:10] + '.csv')) and last_date[0:10] >= '2017-07-03'):
+                while((not os.path.exists('../option_data/option_'+ last_date[0:10] + '.csv')) and last_date[0:10] >= '2017-07-03'):
                     count = count + 1
                     last_date = str(current_date - timedelta(days = count))
                 u_time = last_date[0:10]
-                last_data = pd.read_csv('option_data/option_' + u_time + '.csv')
+                last_data = pd.read_csv('../option_data/option_' + u_time + '.csv')
                 
                 #get max change value at that day
                 changes_p = last_data['Change(P%)'].tolist()
@@ -154,7 +155,7 @@ def get_data(begin, end, dim):
                     p_scale = abs(temp_changes_p_max)
                     P_data[code].append(temp_P_change / p_scale) 
                 else:
-                    if temp_P_change >= 0:
+                    if abs(temp_changes_p_max) >= abs(temp_changes_p_min):
                         p_scale = abs(temp_changes_p_max)
                     else:
                         p_scale = abs(temp_changes_p_min)
@@ -194,7 +195,7 @@ def get_data(begin, end, dim):
         begin_date = datetime.strptime(begin,'%Y-%m-%d')
         count = 1
         next_date = str(begin_date + timedelta(days = count))
-        while((not os.path.exists('option_data/option_'+ next_date[0:10] + '.csv')) and next_date[0:10] < '2018-12-28'):
+        while((not os.path.exists('../option_data/option_'+ next_date[0:10] + '.csv')) and next_date[0:10] < '2018-12-28'):
             count = count + 1
             next_date = str(begin_date + timedelta(days = count))
         begin = next_date[0:10]
@@ -206,11 +207,11 @@ if __name__=="__main__":
 
     # for 5 features
     begin_ends_5 = [
-            ['2017-07-10','2017-07-31'],
-            ['2017-08-07','2017-08-31'],
-            ['2017-09-07','2017-10-03'],
-            ['2017-10-11','2017-10-31'],
-            ['2017-11-07','2017-11-30'],
+#            ['2017-07-10','2017-07-31'],
+#            ['2017-08-07','2017-08-31'],
+#            ['2017-09-07','2017-10-03'],
+#            ['2017-10-11','2017-10-31'],
+#            ['2017-11-07','2017-11-30'],
             ['2017-12-07','2017-12-29'],
             ['2018-01-08','2018-01-31'],
             ['2018-02-07','2018-02-28'],
@@ -246,10 +247,10 @@ if __name__=="__main__":
             ['2018-11-14','2018-11-30'],
             ] 
     
-    for i in range(len(begin_ends_10)):
-        month_data = get_data(begin_ends_10[i][0], begin_ends_10[i][1], 10)
+    for i in range(len(begin_ends_5)):
+        month_data = get_data(begin_ends_5[i][0], begin_ends_5[i][1], 5)
         
-        file_name = '../train_data/' + 'train_data_10d_' + begin_ends_10[i][0][0:7]
+        file_name = '../train_data/' + 'train_data_5d_' + begin_ends_5[i][0][0:7]
         month_data.to_csv(file_name + '.csv', sep=',', na_rep='N/A', index=False)
     
     

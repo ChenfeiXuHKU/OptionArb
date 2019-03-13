@@ -30,9 +30,9 @@ dim = 5
 layers_dims = [dim*2, dim, 1] #  2-layer model
 #layers_dims = [dim*2, dim, 2, 1] #  3-layer model
 
-iterations = 1000
+iterations = 3000
 learning_rate = 0.001
-activation = 'sigmoid'
+activation = 'relu'
 
 for name in names:
     train_set = pd.read_csv(path + 'train_data_' + str(dim) + 'd_' + name + '.csv')
@@ -70,9 +70,9 @@ for name in names:
         w = parameters["W" + str(l+1)]
         b = parameters["b" + str(l+1)]        
         np.savetxt('./weights/w_' + str(L) + 'l_' + str(l+1) + '_' + str(learning_rate) + \
-                   'lr_' + activation + '_' + str(iterations) + 'iters_' + str(dim) + 'f_' + name + '.txt', w, fmt='%0.8f')
+                   '_' + activation + '_' + str(iterations) + '_' + name + '.txt', w, fmt='%0.8f')
         np.savetxt('./weights/b_' + str(L) + 'l_' + str(l+1) + '_' + str(learning_rate) + \
-                   'lr_' + activation + '_' + str(iterations) + 'iters_' + str(dim) + 'f_' + name + '.txt', b, fmt='%0.8f')
+                   '_' + activation + '_' + str(iterations) + '_' + name + '.txt', b, fmt='%0.8f')
 
 
 
