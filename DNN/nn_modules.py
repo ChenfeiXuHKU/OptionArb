@@ -41,6 +41,10 @@ def linear_activation_forward(A_prev, W, b, activation):
     elif activation == "relu":
         Z, linear_cache = linear_forward(A_prev,W,b)
         A = ut.relu(Z)
+        
+    elif activation == "tanh":
+        Z, linear_cache = linear_forward(A_prev,W,b)
+        A = ut.tanh(Z)
     
     cache = (linear_cache, Z)
     
@@ -97,6 +101,10 @@ def linear_activation_backward(dA, cache, activation):
         
     elif activation == "sigmoid":
         dZ = ut.sigmoid_backward(dA, activation_cache)
+        dA_prev, dW, db = linear_backward(dZ, linear_cache)
+    
+    elif activation == "tanh":
+        dZ = ut.tanh_backward(dA, activation_cache)
         dA_prev, dW, db = linear_backward(dZ, linear_cache)
     
     return dA_prev, dW, db

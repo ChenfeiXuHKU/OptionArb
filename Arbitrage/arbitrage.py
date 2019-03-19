@@ -8,15 +8,21 @@ import sys
 sys.path.append(r"C:\Users\chenf\Desktop\GITS\OptionArb")
 import utils as ut
 
-def StatArb(begin, end, number, option_info, fund, Long_fund, Short_fund):
+def StatArb(begin, end, number, option_info):
         	
+    Period = []
+    
     Return = []
     Long_Return = []
     Short_Return = []
-    Period = []
-    fund_cum = []
-    long_fund_cum = []
-    short_fund_cum = []
+
+    Money_Cum = []
+    Long_Money_Cum = []
+    Short_Money_Cum = []
+    
+    money_cum = 0
+    long_money_cum = 0
+    short_money_cum = 0
     
     while begin != end:
         portfolio = searchPortfolio(begin, number)
@@ -30,42 +36,45 @@ def StatArb(begin, end, number, option_info, fund, Long_fund, Short_fund):
         arb_data = pd.read_csv('../option_data/arb_data_' + next_date[0:10] + '.csv')        
         
         #daily stats
+        fund = 0
         long_fund = 0
         short_fund = 0
+        
+        pnl = 0
         long_pnl = 0 
         short_pnl = 0
-        pnl = 0
+
         long_fee = 0
         short_fee = 0
         print(begin)
         print(portfolio)
         print('---------------------------------')
+        
+#for each short-long pair
         for i in range(number):
             long_i = arb_data[(arb_data['Option Code'] == portfolio['1'][0][i])].index.tolist()[0]   			 
             short_i = arb_data[(arb_data['Option Code'] == portfolio['-1'][0][i])].index.tolist()[0]
-            
+                
             if portfolio['1'][1][i] == 'C' and portfolio['-1'][1][i] == 'C':
-                long_settle, long_open = arb_data.loc[long_i,'Settle(C)'],arb_data.loc[long_i,'Open(C)']
-                short_settle, short_open = arb_data.loc[short_i,'Settle(C)'],arb_data.loc[short_i,'Open(C)']
-                    
+                long_settle, long_open = arb_data.loc[long_i,'Settle(C)'],arb_data.loc[long_i,'Open(C)']               
+                short_settle, short_open = arb_data.loc[short_i,'Settle(C)'],arb_data.loc[short_i,'Open(C)']            
             elif portfolio['1'][1][i] == 'C' and portfolio['-1'][1][i] == 'P':
                 long_settle, long_open = arb_data.loc[long_i,'Settle(C)'],arb_data.loc[long_i,'Open(C)']
-                short_settle, short_open = arb_data.loc[short_i,'Settle(P)'],arb_data.loc[short_i,'Open(P)']
-                    
+                short_settle, short_open = arb_data.loc[short_i,'Settle(P)'],arb_data.loc[short_i,'Open(P)']                       
             elif portfolio['1'][1][i] == 'P' and portfolio['-1'][1][i] == 'C':
                 long_settle, long_open = arb_data.loc[long_i,'Settle(P)'],arb_data.loc[long_i,'Open(P)']
-                short_settle, short_open = arb_data.loc[short_i,'Settle(C)'],arb_data.loc[short_i,'Open(C)']
-                    
+                short_settle, short_open = arb_data.loc[short_i,'Settle(C)'],arb_data.loc[short_i,'Open(C)']                       
             elif portfolio['1'][1][i] == 'P' and portfolio['-1'][1][i] == 'P':
                 long_settle, long_open = arb_data.loc[long_i,'Settle(P)'],arb_data.loc[long_i,'Open(P)']
                 short_settle, short_open = arb_data.loc[short_i,'Settle(P)'],arb_data.loc[short_i,'Open(P)']
-            
+                
             last_long_settle = portfolio['1'][2][i]
-            last_short_settle = portfolio['-1'][2][i]
-            long_info = option_info[(option_info['Option Code'] == portfolio['1'][0][i])].index.tolist()[0]   			 
-            short_info = option_info[(option_info['Option Code'] == portfolio['-1'][0][i])].index.tolist()[0]        
+            last_short_settle = portfolio['-1'][2][i]                   
             
-             #buy side
+            long_info = option_info[(option_info['Option Code'] == portfolio['1'][0][i])].index.tolist()[0]   			 
+            short_info = option_info[(option_info['Option Code'] == portfolio['-1'][0][i])].index.tolist()[0]          
+            
+            #buy side
             if long_open > 0 and long_settle > 0:
                 if option_info.loc[long_info,'Tier']==1:
                     long_fee = 3
@@ -73,10 +82,9 @@ def StatArb(begin, end, number, option_info, fund, Long_fund, Short_fund):
                     long_fee = 1
                 elif option_info.loc[long_info,'Tier']==3:
                     long_fee = 0.5       
-#                long_fund = long_fund + long_open*option_info.loc[long_info,'Contract Size'] + long_fee
+                
+#                if last_long_settle <= 1.1*last_long_settle:
                 long_fund = long_fund + last_long_settle*option_info.loc[long_info,'Contract Size'] + long_fee
-#                long_pnl = long_pnl + (long_settle - long_open)*option_info.loc[long_info,'Contract Size'] - 2*long_fee
-#                long_pnl = long_pnl + (long_settle - last_long_settle)*option_info.loc[long_info,'Contract Size'] - 2*long_fee
                 long_pnl = long_pnl + (long_open - last_long_settle)*option_info.loc[long_info,'Contract Size'] - 2*long_fee
                 
             #short side
@@ -86,67 +94,50 @@ def StatArb(begin, end, number, option_info, fund, Long_fund, Short_fund):
                 elif option_info.loc[short_info,'Tier']==2:
                     short_fee = 1
                 elif option_info.loc[short_info,'Tier']==3:
-                    short_fee = 0.5            
-#                short_fund = short_fund + short_open*option_info.loc[short_info,'Contract Size'] + short_fee
+                    short_fee = 0.5        
+                
+#                if last_short_settle >= 0.9*last_short_settle: 
                 short_fund = short_fund + last_short_settle*option_info.loc[short_info,'Contract Size'] + short_fee
-#                short_pnl = short_pnl - (short_settle - short_open)*option_info.loc[short_info,'Contract Size'] - 2*short_fee
-#                short_pnl = short_pnl - (short_settle - last_short_settle)*option_info.loc[short_info,'Contract Size'] - 2*short_fee
                 short_pnl = short_pnl - (short_open - last_short_settle)*option_info.loc[short_info,'Contract Size'] - 2*short_fee
-
-#            if short_fund>0:
-#                print('short size:'+str(option_info.loc[short_info,'Contract Size']))
-#                print('short fund:'+str(short_fund))
-#            if long_fund>0:
-#                print('long size:'+str(option_info.loc[long_info,'Contract Size']))
-#                print('long fund:'+str(long_fund))
-
-        if long_fund > 0 and short_fund > 0:
-#                hands_portfolio_long =  int(l_fund/long_fund)
-#                hands_portfolio_short = int(s_fund/short_fund)
-#                pnl = long_pnl*hands_portfolio_long +short_pnl*hands_portfolio_short
-            pnl = long_pnl+short_pnl
-#                print('long hands:'+str(hands_portfolio_long))
-#                print('short hands:'+str(hands_portfolio_short))
-#            print('pnl:'+str(pnl))
-                
-        elif long_fund == 0 and short_fund > 0:
-#                hands_portfolio_short = int(s_fund/short_fund)
-#                pnl = short_pnl*hands_portfolio_short
-            pnl = short_pnl
-#                print('short hands:'+str(hands_portfolio_short))
-#            print('pnl:'+str(pnl))
-                
-        elif short_fund == 0 and long_fund > 0:
-#                hands_portfolio_long = int(l_fund/long_fund)
-#                pnl = long_pnl*hands_portfolio_long
-            pnl = long_pnl
-#                print('long hands:'+str(hands_portfolio_long))
-#            print('pnl:'+str(pnl))
-            
-        Return.append(pnl/fund)
-        fund = fund + pnl
-        fund_cum.append(round(fund,2))
-
-        if long_fund > 0:
-            Long_Return.append(long_pnl/Long_fund)
-            Long_fund = Long_fund + long_pnl
-            long_fund_cum.append(round(Long_fund,2))
+        
+        #long-short performance
+        fund = long_fund + short_fund
+        pnl = long_pnl + short_pnl
+        if fund != 0:
+            Return.append(pnl/fund)
         else:
-            Long_Return.append(0)
-            long_fund_cum.append(round(Long_fund,2))
-            
+            Return.append(0)
+        money_cum = money_cum + pnl
+        Money_Cum.append(round(money_cum,2))
+        
+        #long side performance
+        if long_fund > 0:
+            Long_Return.append(long_pnl/long_fund)
+        else:
+            Long_Return.append(0)     
+        long_money_cum = long_money_cum + long_pnl
+        Long_Money_Cum.append(round(long_money_cum,2))
+                
+        #short side performance
         if short_fund > 0:
-            Short_Return.append(short_pnl/Short_fund)
-            Short_fund = Short_fund + short_pnl
-            short_fund_cum.append(round(Short_fund,2))
+            Short_Return.append(short_pnl/short_fund)
         else:
             Short_Return.append(0)
-            short_fund_cum.append(round(Short_fund,2))
-
-        Period.append(next_date[0:10])
+        short_money_cum = short_money_cum + short_pnl
+        Short_Money_Cum.append(round(short_money_cum,2))
+    
+        Period.append(begin)
+        
+        #search next trading day
+        begin_date = datetime.strptime(begin,'%Y-%m-%d')
+        count = 1
+        next_date = str(begin_date + timedelta(days = count))
+        while((not os.path.exists('../option_data/option_'+ next_date[0:10] + '.csv')) and next_date[0:10] <= '2018-12-31'):
+            count = count + 1
+            next_date = str(begin_date + timedelta(days = count))
         begin = next_date[0:10]
-
-    return Period,fund_cum,Return,long_fund_cum,Long_Return,short_fund_cum,Short_Return
+        
+    return Period,Money_Cum,Return,Long_Money_Cum,Long_Return,Short_Money_Cum,Short_Return
 
 
 def searchPortfolio(begin, number):        
@@ -241,60 +232,54 @@ names = ['2017-12','2018-01','2018-02','2018-03',\
          '2018-08','2018-09','2018-10','2018-11',]
 
 option_info=pd.read_excel('../option_info.xlsx') 
-Fund = 100000
-Long_fund = 100000
-Short_fund = 100000
-number = 20 #choose how many options
+numbers = [1,5,10,15,20,25,30] #choose how many options
 
-all_Return = []
-all_Long_Return = []
-all_Short_Return = []
-all_Period = []
-all_fund_cum = []
-all_long_fund_cum = []
-all_short_fund_cum = []
-
-for i in range(len(begin_ends)):
-    temp_Period,temp_fund_cum,temp_Return,temp_long_fund_cum,temp_Long_Return,\
-    temp_short_fund_cum,temp_Short_Return = StatArb(begin_ends[i][0], begin_ends[i][1],\
-                                                    number, option_info, Fund, Long_fund, Short_fund)
-
-    Fund = temp_fund_cum[-1]
-    Long_fund = temp_long_fund_cum[-1]
-    Short_fund = temp_short_fund_cum[-1]
+for number in numbers:
+    all_Return = []
+    all_Long_Return = []
+    all_Short_Return = []
+    all_Period = []
+    all_fund_cum = []
+    all_long_fund_cum = []
+    all_short_fund_cum = []    
     
-    all_Return = all_Return + temp_Return
-    all_Long_Return = all_Long_Return + temp_Long_Return
-    all_Short_Return = all_Short_Return + temp_Short_Return
-    all_Period = all_Period + temp_Period
-    all_fund_cum = all_fund_cum + temp_fund_cum
-    all_long_fund_cum = all_long_fund_cum + temp_long_fund_cum
-    all_short_fund_cum = all_short_fund_cum + temp_short_fund_cum
+    for i in range(len(begin_ends)):
+        
+        temp_Period,temp_fund_cum,temp_Return,temp_long_fund_cum,temp_Long_Return,\
+            temp_short_fund_cum,temp_Short_Return = StatArb(begin_ends[i][0], begin_ends[i][1], number, option_info)
+        
+        all_Return = all_Return + temp_Return
+        all_Long_Return = all_Long_Return + temp_Long_Return
+        all_Short_Return = all_Short_Return + temp_Short_Return
+        all_Period = all_Period + temp_Period
+        all_fund_cum = all_fund_cum + temp_fund_cum
+        all_long_fund_cum = all_long_fund_cum + temp_long_fund_cum
+        all_short_fund_cum = all_short_fund_cum + temp_short_fund_cum
+        
+    data = pd.DataFrame(index = all_Period, columns=['FundCum','Return','LongFundCum','LongReturn','ShortFundCum','ShortReturn'])
+    data['FundCum']=np.array(all_fund_cum)
+    data['Return']=np.array(all_Return)
+    data['LongFundCum']=np.array(all_long_fund_cum)
+    data['LongReturn']=np.array(all_Long_Return)
+    data['ShortFundCum']=np.array(all_short_fund_cum)
+    data['ShortReturn']=np.array(all_Short_Return)
     
-data = pd.DataFrame(index = all_Period, columns=['FundCum','Return','LongFundCum','LongReturn','ShortFundCum','ShortReturn'])
-data['FundCum']=np.array(all_fund_cum)
-data['Return']=np.array(all_Return)
-data['LongFundCum']=np.array(all_long_fund_cum)
-data['LongReturn']=np.array(all_Long_Return)
-data['ShortFundCum']=np.array(all_short_fund_cum)
-data['ShortReturn']=np.array(all_Short_Return)
-
-indicators = ut.Calcuate_performance_indicators(data['Return'], 252, 'Long-Short')
-indicators_long = ut.Calcuate_performance_indicators(data['LongReturn'], 252, 'Long')
-indicators_short = ut.Calcuate_performance_indicators(data['ShortReturn'], 252, 'Short')
-
-indis = (indicators.append(indicators_long)).append(indicators_short)
-
-print(indicators.T)
-
-name='Results(open-close, '+str(number)+'options, BinomialTree)'
-wbw = pd.ExcelWriter(name+'.xlsx')
-data.to_excel(wbw, 'PnL')
-indis.to_excel(wbw, 'Indicators')
-
-wbw.save()
-wbw.close()
-
+    indicators = ut.Calcuate_performance_indicators(data['Return'], 244, 'Long-Short')
+    indicators_long = ut.Calcuate_performance_indicators(data['LongReturn'], 244, 'Long')
+    indicators_short = ut.Calcuate_performance_indicators(data['ShortReturn'], 244, 'Short')
+    
+    indis = (indicators.append(indicators_long)).append(indicators_short)
+    
+    print(indis.T)
+    
+    name='Results(open-close,'+str(number)+'options, BinomialTree)'
+    wbw = pd.ExcelWriter(name+'.xlsx')
+    indis.to_excel(wbw, 'Indicators')
+    data.to_excel(wbw, 'PnL')
+    
+    
+    wbw.save()
+    wbw.close()
 
 
 

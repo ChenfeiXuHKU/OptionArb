@@ -4,6 +4,7 @@ Created on Sun Dec 23 15:12:51 2018
 
 @author: chenf
 """
+from __future__ import division
 import numpy as np
 import pandas as pd
 
@@ -19,9 +20,21 @@ def relu(z):
     
     return s
 
+def tanh(z):
+    
+    s = (np.exp(z) - np.exp(-z))/(np.exp(z) + np.exp(-z))
+
+    return s
+
 def sigmoid_backward(dA, z):
     
     dA = np.multiply(dA, sigmoid(z)*(1 - sigmoid(z)))
+
+    return dA
+
+def tanh_backward(dA, z):
+    
+    dA = np.multiply(dA, 1 - tanh(z)*tanh(z))
 
     return dA
 
