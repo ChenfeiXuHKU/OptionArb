@@ -15,6 +15,7 @@ import sys
 sys.path.append(r"C:\Users\chenf\Desktop\GITS\OptionArb\utils")
 import utils as ut
 import nn_modules as nnm
+from sklearn import preprocessing
 
 def Predict(begin, end, dim, number, parameters, activation, option_info):
 
@@ -147,12 +148,12 @@ def SearchPortfolio(begin, dim, number, parameters, activation):
     
     portfolio = {}
     Predict_data = OrderedDict() 
-    data = pd.read_csv('../predict_data/predict_data_' + str(dim) + 'd_' + begin + '.csv')
-    
+    data = pd.read_csv('../predict_data_original_HSI/predict_data_' + str(dim) + 'd_' + begin + '.csv')
+    data_scaled = preprocessing.scale(data.values[[1,3,5,7,9],:],axis=1)
     #predict probs
     for i in range(data.shape[1]):
-        x = data.iloc[:,i].values
-        AL, caches = nnm.L_model_forward(x.reshape(x.shape[0],1), parameters, activation)
+        x = data_scaled[:,i]
+        AL, caches = nnm.L_model_forward(x.reshape(data_scaled.shape[0],1), parameters, activation)
         Predict_data.update({data.columns[i]:AL[0][0]})      
 
     #sort
@@ -223,12 +224,12 @@ option_info=pd.read_excel('../option_info.xlsx')
 dim = 5 #feature dim
 
 iterations = [1000,2000,3000]
-learning_rates = [0.1,0.01]
+learning_rates = [0.001,0.01]
 activations = ['tanh','relu']
-Ls = [3,]
+Ls = [2,]
 
 option_numbers = [10,30,20,25,15] #choose how many options
-layers_dims = [dim*2, dim, 2, 1]
+layers_dims = [dim, 2, 1]
 
 for option_number in option_numbers:
     for L in Ls: 
@@ -248,10 +249,10 @@ for option_number in option_numbers:
                         parameters = {}
                         for l in range(L):
                             
-                            temp_w = np.loadtxt('./weights/w-' + str(L) + '(' + str(l+1) + ')-' + str(learning_rate) + '-' + str(iteration)\
+                            temp_w = np.loadtxt('./SNN-Ws-original-HSI/w-Z-5-' + str(L) + '(' + str(l+1) + ')-' + str(learning_rate) + '-' + str(iteration)\
                                + '-' + activation + '-' + names[i] + '.txt')
                             parameters['W' + str(l+1)] = temp_w.reshape(layers_dims[l+1],layers_dims[l])
-                            temp_b = np.loadtxt('./weights/b-' + str(L) + '(' + str(l+1) + ')-' + str(learning_rate) + '-' + str(iteration)\
+                            temp_b = np.loadtxt('./SNN-Ws-original-HSI/b-Z-5-' + str(L) + '(' + str(l+1) + ')-' + str(learning_rate) + '-' + str(iteration)\
                                + '-' + activation + '-' + names[i] + '.txt')
                             parameters['b' + str(l+1)] = temp_b.reshape(layers_dims[l+1],1)
     
@@ -282,7 +283,7 @@ for option_number in option_numbers:
                             
                     print(indis.T)
                             
-                    name='./results/Results-' + str(L) + 'L-' + str(option_number) + '-' + str(learning_rate) + \
+                    name='./SNN-results-original-HSI/Results-5-' + str(L) + 'L-' + str(option_number) + '-' + str(learning_rate) + \
                                       '-' + str(iteration) + '-' + activation 
                     wbw = pd.ExcelWriter(name+'.xlsx')
                     

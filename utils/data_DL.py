@@ -29,7 +29,12 @@ def get_data(begin, end, dim):
                 continue
             else:  
                 C_benchmark = float(data.loc[i,'Change(HSIo,C%)'])
-                
+            
+            if '-' in data['Change(C%)'].tolist():
+                templist = data['Change(C%)'].tolist().remove('-')
+            else:
+                templist = data['Change(C%)'].tolist()
+            
             if C_change >= C_benchmark:
                 C_data.update({code:[1]})
             else:
@@ -49,51 +54,54 @@ def get_data(begin, end, dim):
                 last_data = pd.read_csv('../option_data/option_' + u_time + '.csv')
                 
                 #get max change value at that day
-                changes_c = last_data['Change(C%)'].tolist()
-                while '-' in changes_c:
-                    changes_c.remove('-')
-                temp_changes_c_max = max([float(cc) for cc in changes_c])
-                temp_changes_c_min = min([float(cc) for cc in changes_c])        
+#                changes_c = last_data['Change(C%)'].tolist()
+#                while '-' in changes_c:
+#                    changes_c.remove('-')
+#                temp_changes_c_max = max([float(cc) for cc in changes_c])
+#                temp_changes_c_min = min([float(cc) for cc in changes_c])        
                 #get change value for one option at that day
                 try:
                     last_index = last_data[(last_data['Option Code'] == code)].index.tolist()[0] 
                 except:
                     break
+                
                 if last_data.loc[last_index,'Change(C%)'] == '-':
                     break
                 else:
                     temp_C_change = float(last_data.loc[last_index,'Change(C%)'])     
                 #normalize change value and store
-                if temp_changes_c_max == 0:
-                    c_scale = abs(temp_changes_c_min)
-                    C_data[code].append(temp_C_change / c_scale)        
-                elif temp_changes_c_min == 0:
-                    c_scale = abs(temp_changes_c_max)
-                    C_data[code].append(temp_C_change / c_scale)
-                else:
-                    if abs(temp_changes_c_max) >= abs(temp_changes_c_min):
-                        c_scale = abs(temp_changes_c_max)
-                    else:
-                        c_scale = abs(temp_changes_c_min)
+#                if temp_changes_c_max == 0:
+#                    c_scale = abs(temp_changes_c_min)
+#                    C_data[code].append(temp_C_change / c_scale)        
+#                elif temp_changes_c_min == 0:
+#                    c_scale = abs(temp_changes_c_max)
+#                    C_data[code].append(temp_C_change / c_scale)
+#                else:
+#                    if abs(temp_changes_c_max) >= abs(temp_changes_c_min):
+#                        c_scale = abs(temp_changes_c_max)
+#                    else:
+#                        c_scale = abs(temp_changes_c_min)
             
-                    C_data[code].append(temp_C_change / c_scale)
+                
+                C_data[code].append(temp_C_change)
 
                 #get max volume at that day
-                volumes_c = last_data['Volume(C)'].tolist()
-                while '-' in volumes_c:
-                    volumes_c.remove('-')
-                temp_c_vol_max = max([int(str(vc).replace(',','')) for vc in volumes_c])            
+#                volumes_c = last_data['Volume(C)'].tolist()
+#                while '-' in volumes_c:
+#                    volumes_c.remove('-')
+#                temp_c_vol_max = max([int(str(vc).replace(',','')) for vc in volumes_c])            
                 #get volume for above option at that day
                 if last_data.loc[last_index,'Volume(C)'] == '-':
                     break
                 else:
                     temp_C_volume = int(str(last_data.loc[last_index,'Volume(C)']).replace(',',''))
                 #normalize volume
-                if temp_c_vol_max == 0:
-                    C_data[code].append(0)        
-                else:
-                    C_data[code].append(temp_C_volume / abs(temp_c_vol_max))
-
+#                if temp_c_vol_max == 0:
+#                    C_data[code].append(0)        
+#                else:
+#                    C_data[code].append(temp_C_volume / abs(temp_c_vol_max))
+                
+                C_data[code].append(temp_C_volume)
                 days = days + 1
                 temp_date = u_time          
             
@@ -114,6 +122,11 @@ def get_data(begin, end, dim):
             else:  
                 P_benchmark = float(data.loc[i,'Change(HSIo,P%)'])
             
+            if '-' in data['Change(P%)'].tolist():
+                templist = data['Change(P%)'].tolist().remove('-')
+            else:
+                templist = data['Change(P%)'].tolist()
+                
             if P_change >= P_benchmark:
                 P_data.update({code:[1]})
             else:
@@ -133,50 +146,54 @@ def get_data(begin, end, dim):
                 last_data = pd.read_csv('../option_data/option_' + u_time + '.csv')
                 
                 #get max change value at that day
-                changes_p = last_data['Change(P%)'].tolist()
-                while '-' in changes_p:
-                    changes_p.remove('-')
-                temp_changes_p_max = max([float(cp) for cp in changes_p])
-                temp_changes_p_min = min([float(cp) for cp in changes_p])
+#                changes_p = last_data['Change(P%)'].tolist()
+#                while '-' in changes_p:
+#                    changes_p.remove('-')
+#                temp_changes_p_max = max([float(cp) for cp in changes_p])
+#                temp_changes_p_min = min([float(cp) for cp in changes_p])
                 #get change value for one option at that day
                 try:
                     last_index = last_data[(last_data['Option Code'] == code)].index.tolist()[0] 
                 except:
                     break
+                
                 if last_data.loc[last_index,'Change(P%)'] == '-':
                     break
                 else:
                     temp_P_change = float(last_data.loc[last_index,'Change(P%)'])       
                 #normalize change value and store
-                if temp_changes_p_max == 0:
-                    p_scale = abs(temp_changes_p_min)
-                    P_data[code].append(temp_P_change / p_scale)       
-                elif temp_changes_p_min == 0:
-                    p_scale = abs(temp_changes_p_max)
-                    P_data[code].append(temp_P_change / p_scale) 
-                else:
-                    if abs(temp_changes_p_max) >= abs(temp_changes_p_min):
-                        p_scale = abs(temp_changes_p_max)
-                    else:
-                        p_scale = abs(temp_changes_p_min)
-                    P_data[code].append(temp_P_change / p_scale) 
+#                if temp_changes_p_max == 0:
+#                    p_scale = abs(temp_changes_p_min)
+#                    P_data[code].append(temp_P_change / p_scale)       
+#                elif temp_changes_p_min == 0:
+#                    p_scale = abs(temp_changes_p_max)
+#                    P_data[code].append(temp_P_change / p_scale) 
+#                else:
+#                    if abs(temp_changes_p_max) >= abs(temp_changes_p_min):
+#                        p_scale = abs(temp_changes_p_max)
+#                    else:
+#                        p_scale = abs(temp_changes_p_min)
+                
+                P_data[code].append(temp_P_change) 
 
                 #get max volume at that day
-                volumes_p = last_data['Volume(P)'].tolist()
-                while '-' in volumes_p:
-                    volumes_p.remove('-')
-                temp_p_vol_max = max([int(str(vp).replace(',','')) for vp in volumes_p])          
+#                volumes_p = last_data['Volume(P)'].tolist()
+#                while '-' in volumes_p:
+#                    volumes_p.remove('-')
+#                temp_p_vol_max = max([int(str(vp).replace(',','')) for vp in volumes_p])          
                 #get volume for above option at that day
                 if last_data.loc[last_index,'Volume(P)'] == '-':
                     break
                 else:
                     temp_P_volume = int(str(last_data.loc[last_index,'Volume(P)']).replace(',','')) 
                 #normalize volume
-                if temp_p_vol_max == 0:
-                    P_data[code].append(0)        
-                else:
-                    P_data[code].append(temp_P_volume / abs(temp_p_vol_max))
-
+#                if temp_p_vol_max == 0:
+#                    P_data[code].append(0)        
+#                else:
+#                    P_data[code].append(temp_P_volume / abs(temp_p_vol_max))
+                
+                P_data[code].append(temp_P_volume)
+                
                 days = days + 1
                 temp_date = u_time          
             
@@ -250,7 +267,7 @@ if __name__=="__main__":
     for i in range(len(begin_ends_5)):
         month_data = get_data(begin_ends_5[i][0], begin_ends_5[i][1], 5)
         
-        file_name = '../train_data/' + 'train_data_5d_' + begin_ends_5[i][0][0:7]
+        file_name = '../train_data_original_HSI/' + 'train_data_5d_' + begin_ends_5[i][0][0:7]
         month_data.to_csv(file_name + '.csv', sep=',', na_rep='N/A', index=False)
     
     

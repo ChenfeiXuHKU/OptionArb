@@ -41,11 +41,11 @@ def PredictData(begin, end, dim):
                 last_data = pd.read_csv('../option_data/option_' + u_time + '.csv')
                    
                 #get max change value at that day
-                changes_c = last_data['Change(C%)'].tolist()
-                while '-' in changes_c:
-                    changes_c.remove('-')
-                temp_changes_c_max = max([float(cc) for cc in changes_c])
-                temp_changes_c_min = min([float(cc) for cc in changes_c])
+#                changes_c = last_data['Change(C%)'].tolist()
+#                while '-' in changes_c:
+#                    changes_c.remove('-')
+#                temp_changes_c_max = max([float(cc) for cc in changes_c])
+#                temp_changes_c_min = min([float(cc) for cc in changes_c])
                 #get change value for one option at that day
                 try:
                     last_index = last_data[(last_data['Option Code'] == code)].index.tolist()[0] 
@@ -56,35 +56,35 @@ def PredictData(begin, end, dim):
                 else:
                     temp_C_change = float(last_data.loc[last_index,'Change(C%)'])  
                 #normalize change value and store
-                if temp_changes_c_max == 0:
-                    c_scale = abs(temp_changes_c_min)
-                    inputs.append(temp_C_change / c_scale)        
-                elif temp_changes_c_min == 0:
-                    c_scale = abs(temp_changes_c_max)
-                    inputs.append(temp_C_change / c_scale)
-                else:
-                    if abs(temp_changes_c_max) >= abs(temp_changes_c_min):
-                        c_scale = abs(temp_changes_c_max)
-                    else:
-                        c_scale = abs(temp_changes_c_min)
-                    inputs.append(temp_C_change / c_scale)
+#                if temp_changes_c_max == 0:
+#                    c_scale = abs(temp_changes_c_min)
+#                    inputs.append(temp_C_change / c_scale)        
+#                elif temp_changes_c_min == 0:
+#                    c_scale = abs(temp_changes_c_max)
+#                    inputs.append(temp_C_change / c_scale)
+#                else:
+#                    if abs(temp_changes_c_max) >= abs(temp_changes_c_min):
+#                        c_scale = abs(temp_changes_c_max)
+#                    else:
+#                        c_scale = abs(temp_changes_c_min)
+                inputs.append(temp_C_change)
 
                 #get max volume at that day
-                volumes_c = last_data['Volume(C)'].tolist()
-                while '-' in volumes_c:
-                    volumes_c.remove('-')
-                temp_c_vol_max = max([int(str(vc).replace(',','')) for vc in volumes_c])    
+#                volumes_c = last_data['Volume(C)'].tolist()
+#                while '-' in volumes_c:
+#                    volumes_c.remove('-')
+#                temp_c_vol_max = max([int(str(vc).replace(',','')) for vc in volumes_c])    
                 #get volume for above option at that day
                 if last_data.loc[last_index,'Volume(C)'] == '-':
                     break
                 else:
                     temp_C_volume = int(str(last_data.loc[last_index,'Volume(C)']).replace(',',''))
                 #normalize volume
-                if temp_c_vol_max == 0:
-                    inputs.append(0)        
-                else:
-                    inputs.append(temp_C_volume / abs(temp_c_vol_max))
-               
+#                if temp_c_vol_max == 0:
+#                    inputs.append(0)        
+#                else:
+#                    inputs.append(temp_C_volume / abs(temp_c_vol_max))
+                inputs.append(temp_C_volume)
                 #get last settle
                 if days == 0:
                     last_settle = last_data.loc[last_index,'Settle(C)']
@@ -116,12 +116,13 @@ def PredictData(begin, end, dim):
                     last_date = str(current_date - timedelta(days = count))
                 u_time = last_date[0:10]
                 last_data = pd.read_csv('../option_data/option_' + u_time + '.csv')
+                
                 #get max change value at that day
-                changes_p = last_data['Change(P%)'].tolist()
-                while '-' in changes_p:
-                    changes_p.remove('-')
-                temp_changes_p_max = max([float(cp) for cp in changes_p])
-                temp_changes_p_min = min([float(cp) for cp in changes_p])
+#                changes_p = last_data['Change(P%)'].tolist()
+#                while '-' in changes_p:
+#                    changes_p.remove('-')
+#                temp_changes_p_max = max([float(cp) for cp in changes_p])
+#                temp_changes_p_min = min([float(cp) for cp in changes_p])
                 #get change value for one option at that day
                 try:
                     last_index = last_data[(last_data['Option Code'] == code)].index.tolist()[0] 
@@ -132,34 +133,34 @@ def PredictData(begin, end, dim):
                 else:
                     temp_P_change = float(last_data.loc[last_index,'Change(P%)'])
                 #normalize change value and store
-                if temp_changes_p_max == 0:
-                    p_scale = abs(temp_changes_p_min)
-                    inputs.append(temp_P_change / p_scale)       
-                elif temp_changes_p_min == 0:
-                    p_scale = abs(temp_changes_p_max)
-                    inputs.append(temp_P_change / p_scale) 
-                else:
-                    if abs(temp_changes_p_max) >= abs(temp_changes_p_min):
-                        p_scale = abs(temp_changes_p_max)
-                    else:
-                        p_scale = abs(temp_changes_p_min)
-                    inputs.append(temp_P_change / p_scale) 
+#                if temp_changes_p_max == 0:
+#                    p_scale = abs(temp_changes_p_min)
+#                    inputs.append(temp_P_change / p_scale)       
+#                elif temp_changes_p_min == 0:
+#                    p_scale = abs(temp_changes_p_max)
+#                    inputs.append(temp_P_change / p_scale) 
+#                else:
+#                    if abs(temp_changes_p_max) >= abs(temp_changes_p_min):
+#                        p_scale = abs(temp_changes_p_max)
+#                    else:
+#                        p_scale = abs(temp_changes_p_min)
+                inputs.append(temp_P_change) 
                 
                 #get max volume at that day
-                volumes_p = last_data['Volume(P)'].tolist()
-                while '-' in volumes_p:
-                    volumes_p.remove('-')
-                temp_p_vol_max = max([int(str(vp).replace(',','')) for vp in volumes_p])
+#                volumes_p = last_data['Volume(P)'].tolist()
+#                while '-' in volumes_p:
+#                    volumes_p.remove('-')
+#                temp_p_vol_max = max([int(str(vp).replace(',','')) for vp in volumes_p])
                 #get volume for above option at that day
                 if last_data.loc[last_index,'Volume(P)'] == '-':
                     break
                 else:
                     temp_P_volume = int(str(last_data.loc[last_index,'Volume(P)']).replace(',',''))
                 #normalize volume
-                if temp_p_vol_max == 0:
-                    inputs.append(0)        
-                else:
-                    inputs.append(temp_P_volume / abs(temp_p_vol_max))
+#                if temp_p_vol_max == 0:
+#                    inputs.append(0)        
+#                else:
+                inputs.append(temp_P_volume)
                     
                 if days == 0:
                     last_settle = last_data.loc[last_index,'Settle(P)']
@@ -172,7 +173,7 @@ def PredictData(begin, end, dim):
             
         if Predict_data:
             Predict_data_pd = pd.DataFrame.from_dict(Predict_data, orient='index').T
-            file_name = '../predict_data/' + 'predict_data_' + str(dim) + 'd_' + begin
+            file_name = '../predict_data_original_HSI/' + 'predict_data_' + str(dim) + 'd_' + begin
             Predict_data_pd.to_csv(file_name + '.csv', sep=',', na_rep='N/A', index=False)
     
         #search next trading day

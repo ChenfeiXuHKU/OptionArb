@@ -10,6 +10,7 @@ import math
 import sys
 sys.path.append(r"C:\Users\chenf\Desktop\GITS\OptionArb\utils")
 import nn_modules as nnm
+from sklearn import preprocessing
 
 def L_layer_model(X, Y, layers_dims, activation, parameters, learning_rate):
 
@@ -22,17 +23,17 @@ def L_layer_model(X, Y, layers_dims, activation, parameters, learning_rate):
     return parameters
 
 #%%
-path = '../train_data/'
+path = '../train_data_original_HSI/'
 names = ['2017-12','2018-01','2018-02','2018-03',\
          '2018-04','2018-05','2018-06','2018-07',\
          '2018-08','2018-09','2018-10','2018-11',]
 dim = 5
 #layers_dims = [dim*2, dim, 1] #  2-layer model
-layers_dims = [dim*2, dim, 1] #  3-layer model
+layers_dims = [dim, 2, 1] #  3-layer model
 
-iterations = [1000]
-learning_rates = [0.01,0.1]
-activations = ['tanh']
+iterations = [2000]
+learning_rates = [0.01,0.001]
+activations = ['tanh','relu']
 
 for activation in activations:
     for iteration in iterations:
@@ -51,21 +52,27 @@ for activation in activations:
                     for j in range(batches):
                         if batch_count * batch_size + batch_size > train_set.shape[1]:
                             mini_train_set = train_set[:,batch_count * batch_size:]
-                            train_x = mini_train_set[1:11,:]
+                            train_x = mini_train_set[[1,3,5,7,9],:]
+                            train_x_scaled = preprocessing.scale(train_x,axis=1)
+                            
                             train_y = mini_train_set[0:1,:]
-                            parameters = L_layer_model(train_x, train_y, layers_dims, activation, parameters, learning_rate)
+                            parameters = L_layer_model(train_x_scaled, train_y, layers_dims, activation, parameters, learning_rate)
                         else:
                             start = batch_count * batch_size
                             end = start + batch_size
                             mini_train_set = train_set[:,start: end]
-                            train_x = mini_train_set[1:11,:]
+                            train_x = mini_train_set[[1,3,5,7,9],:]
+                            train_x_scaled = preprocessing.scale(train_x,axis=1)
+                            
                             train_y = mini_train_set[0:1,:]
-                            parameters = L_layer_model(train_x, train_y, layers_dims, activation, parameters, learning_rate)
+                            parameters = L_layer_model(train_x_scaled, train_y, layers_dims, activation, parameters, learning_rate)
                             batch_count = batch_count + 1
                        
-                train_x = train_set[1:11,:]
+                train_x = train_set[[1,3,5,7,9],:]
+                train_x_scaled = preprocessing.scale(train_x,axis=1)
+                
                 train_y = train_set[0:1,:]       
-                Y_prediction_train = nnm.predict(train_x, parameters, activation)
+                Y_prediction_train = nnm.predict(train_x_scaled, parameters, activation)
                 print("train accuracy:{}%".format(100 - np.mean(np.abs(Y_prediction_train - train_y)) * 100))   
                 
                 #save
@@ -73,9 +80,9 @@ for activation in activations:
                 for l in range(L):
                     w = parameters["W" + str(l+1)]
                     b = parameters["b" + str(l+1)]        
-                    np.savetxt('./nnweights/w-' + str(L) + '(' + str(l+1) + ')-' + str(learning_rate) + '-' + str(iteration)\
+                    np.savetxt('./SNN-Ws-original-HSI/w-Z-5-' + str(L) + '(' + str(l+1) + ')-' + str(learning_rate) + '-' + str(iteration)\
                                + '-' + activation + '-' + name + '.txt', w, fmt='%0.15f')
-                    np.savetxt('./nnweights/b-' + str(L) + '(' + str(l+1) + ')-' + str(learning_rate) + '-' + str(iteration)\
+                    np.savetxt('./SNN-Ws-original-HSI/b-Z-5-' + str(L) + '(' + str(l+1) + ')-' + str(learning_rate) + '-' + str(iteration)\
                                + '-' + activation + '-' + name + '.txt', b, fmt='%0.15f')
             
             
