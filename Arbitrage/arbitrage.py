@@ -5,7 +5,7 @@ from datetime import datetime
 from datetime import timedelta
 import os
 import sys
-sys.path.append(r"C:\Users\chenf\Desktop\GITS\OptionArb")
+sys.path.append(r"C:\Users\chenf\Desktop\GITS\OptionArb\utils")
 import utils as ut
 
 def StatArb(begin, end, number, option_info):
@@ -83,9 +83,9 @@ def StatArb(begin, end, number, option_info):
                 elif option_info.loc[long_info,'Tier']==3:
                     long_fee = 0.5       
                 
-#                if last_long_settle <= 1.1*last_long_settle:
-                long_fund = long_fund + last_long_settle*option_info.loc[long_info,'Contract Size'] + long_fee
-                long_pnl = long_pnl + (long_open - last_long_settle)*option_info.loc[long_info,'Contract Size'] - 2*long_fee
+                if long_open <= 1.1*last_long_settle:
+                    long_fund = long_fund + long_open*option_info.loc[long_info,'Contract Size'] + long_fee
+                    long_pnl = long_pnl + (long_settle - long_open)*option_info.loc[long_info,'Contract Size'] - 2*long_fee
                 
             #short side
             if short_open > 0 and short_settle > 0:
@@ -96,9 +96,9 @@ def StatArb(begin, end, number, option_info):
                 elif option_info.loc[short_info,'Tier']==3:
                     short_fee = 0.5        
                 
-#                if last_short_settle >= 0.9*last_short_settle: 
-                short_fund = short_fund + last_short_settle*option_info.loc[short_info,'Contract Size'] + short_fee
-                short_pnl = short_pnl - (short_open - last_short_settle)*option_info.loc[short_info,'Contract Size'] - 2*short_fee
+                if short_open >= 0.9*last_short_settle: 
+                    short_fund = short_fund + short_open*option_info.loc[short_info,'Contract Size'] + short_fee
+                    short_pnl = short_pnl - (short_settle - short_open)*option_info.loc[short_info,'Contract Size'] - 2*short_fee
         
         #long-short performance
         fund = long_fund + short_fund
@@ -155,11 +155,12 @@ def searchPortfolio(begin, number):
     short_types = []
             
     settle_c = np.array(call_data['Settle(C)'].tolist())
-    t_p_c =  np.array(call_data['T-Price(tree,C)'].tolist())
+#    t_p_c =  np.array(call_data['T-Price(tree,C)'].tolist())
     settle_p = np.array(put_data['Settle(P)'].tolist())
-    t_p_p =  np.array(put_data['T-Price(tree,P)'].tolist())
-        #t_p_c =  np.array(data['T-Price(BS,C)'].tolist())
-        
+#    t_p_p =  np.array(put_data['T-Price(tree,P)'].tolist())
+    t_p_c =  np.array(call_data['T-Price(BS,C)'].tolist())
+    t_p_p =  np.array(put_data['T-Price(BS,P)'].tolist())
+    
     diff_c = settle_c - t_p_c
     diff_p = settle_p - t_p_p
     diff= np.append(diff_c, diff_p)
@@ -232,7 +233,7 @@ names = ['2017-12','2018-01','2018-02','2018-03',\
          '2018-08','2018-09','2018-10','2018-11',]
 
 option_info=pd.read_excel('../option_info.xlsx') 
-numbers = [1,5,10,15,20,25,30] #choose how many options
+numbers = [15] #choose how many options
 
 for number in numbers:
     all_Return = []
@@ -272,7 +273,7 @@ for number in numbers:
     
     print(indis.T)
     
-    name='Results(open-close,'+str(number)+'options, BinomialTree)'
+    name='Results('+str(number)+'options, BS)'
     wbw = pd.ExcelWriter(name+'.xlsx')
     indis.to_excel(wbw, 'Indicators')
     data.to_excel(wbw, 'PnL')

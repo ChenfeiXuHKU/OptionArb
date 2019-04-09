@@ -29,11 +29,11 @@ names = ['2017-12','2018-01','2018-02','2018-03',\
          '2018-08','2018-09','2018-10','2018-11',]
 dim = 5
 #layers_dims = [dim*2, dim, 1] #  2-layer model
-layers_dims = [dim, 2, 1] #  3-layer model
+layers_dims = [dim, 4, 2, 1] #  3-layer model
 
-iterations = [2000]
-learning_rates = [0.01,0.001]
-activations = ['tanh','relu']
+iterations = [3000]
+learning_rates = [0.1]
+activations = ['tanh']
 
 for activation in activations:
     for iteration in iterations:
@@ -80,9 +80,9 @@ for activation in activations:
                 for l in range(L):
                     w = parameters["W" + str(l+1)]
                     b = parameters["b" + str(l+1)]        
-                    np.savetxt('./SNN-Ws-original-HSI/w-Z-5-' + str(L) + '(' + str(l+1) + ')-' + str(learning_rate) + '-' + str(iteration)\
+                    np.savetxt('./SNN-Ws-original-HSI/w2-Z-5-' + str(L) + '(' + str(l+1) + ')-' + str(learning_rate) + '-' + str(iteration)\
                                + '-' + activation + '-' + name + '.txt', w, fmt='%0.15f')
-                    np.savetxt('./SNN-Ws-original-HSI/b-Z-5-' + str(L) + '(' + str(l+1) + ')-' + str(learning_rate) + '-' + str(iteration)\
+                    np.savetxt('./SNN-Ws-original-HSI/b2-Z-5-' + str(L) + '(' + str(l+1) + ')-' + str(learning_rate) + '-' + str(iteration)\
                                + '-' + activation + '-' + name + '.txt', b, fmt='%0.15f')
             
             

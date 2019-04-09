@@ -223,13 +223,13 @@ option_info=pd.read_excel('../option_info.xlsx')
 
 dim = 5 #feature dim
 
-iterations = [1000,2000,3000]
-learning_rates = [0.001,0.01]
-activations = ['tanh','relu']
-Ls = [2,]
+iterations = [3000]
+learning_rates = [0.1]
+activations = ['tanh']
+Ls = [3,]
 
 option_numbers = [10,30,20,25,15] #choose how many options
-layers_dims = [dim, 2, 1]
+layers_dims = [dim, 4, 2, 1]
 
 for option_number in option_numbers:
     for L in Ls: 
@@ -249,10 +249,10 @@ for option_number in option_numbers:
                         parameters = {}
                         for l in range(L):
                             
-                            temp_w = np.loadtxt('./SNN-Ws-original-HSI/w-Z-5-' + str(L) + '(' + str(l+1) + ')-' + str(learning_rate) + '-' + str(iteration)\
+                            temp_w = np.loadtxt('./SNN-Ws-original-HSI/w2-Z-5-' + str(L) + '(' + str(l+1) + ')-' + str(learning_rate) + '-' + str(iteration)\
                                + '-' + activation + '-' + names[i] + '.txt')
                             parameters['W' + str(l+1)] = temp_w.reshape(layers_dims[l+1],layers_dims[l])
-                            temp_b = np.loadtxt('./SNN-Ws-original-HSI/b-Z-5-' + str(L) + '(' + str(l+1) + ')-' + str(learning_rate) + '-' + str(iteration)\
+                            temp_b = np.loadtxt('./SNN-Ws-original-HSI/b2-Z-5-' + str(L) + '(' + str(l+1) + ')-' + str(learning_rate) + '-' + str(iteration)\
                                + '-' + activation + '-' + names[i] + '.txt')
                             parameters['b' + str(l+1)] = temp_b.reshape(layers_dims[l+1],1)
     
@@ -283,7 +283,7 @@ for option_number in option_numbers:
                             
                     print(indis.T)
                             
-                    name='./SNN-results-original-HSI/Results-5-' + str(L) + 'L-' + str(option_number) + '-' + str(learning_rate) + \
+                    name='./result2/Results-5-' + str(L) + 'L-' + str(option_number) + '-' + str(learning_rate) + \
                                       '-' + str(iteration) + '-' + activation 
                     wbw = pd.ExcelWriter(name+'.xlsx')
                     
